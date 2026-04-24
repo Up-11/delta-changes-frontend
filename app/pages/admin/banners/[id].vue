@@ -58,11 +58,11 @@
             </UFormField>
           </div>
 
-          <UFormField label="Изображение" name="mediaId">
-            <AdminImageUploader
+          <UFormField label="Медиа" name="mediaId">
+            <AdminMediaUploader
               v-model="mediaUrl"
-              label="Загрузить изображение"
-              icon="i-lucide-image"
+              label="Загрузить изображение или видео"
+              icon="i-lucide-file-video"
               @update:model-value="state.mediaId = $event"
             />
           </UFormField>

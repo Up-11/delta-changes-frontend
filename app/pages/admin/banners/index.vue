@@ -47,11 +47,23 @@
             class="w-16 h-16 rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200"
           >
             <img
-              v-if="row.original.media?.[0]?.url"
+              v-if="
+                row.original.media?.[0]?.url &&
+                row.original.media[0]?.type === 'IMAGE'
+              "
               :src="`http://localhost:4200${row.original.media[0].url}`"
               :alt="row.original.mainText"
               class="w-full h-full object-cover"
             />
+            <div
+              v-else-if="
+                row.original.media?.[0]?.url &&
+                row.original.media[0]?.type === 'VIDEO'
+              "
+              class="w-full h-full flex items-center justify-center bg-neutral-900"
+            >
+              <UIcon name="i-lucide-file-video" class="w-6 h-6 text-white" />
+            </div>
             <div
               v-else
               class="w-full h-full flex items-center justify-center text-neutral-300"

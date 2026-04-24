@@ -71,6 +71,31 @@
       </div>
 
       <UTable v-else :data="filteredProjects" :columns="columns" class="w-full">
+        <template #media-cell="{ row }">
+          <div
+            class="w-16 h-16 rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200"
+          >
+            <img
+              v-if="
+                row.original.media?.[0]?.url &&
+                row.original.media[0]?.type === 'IMAGE'
+              "
+              :src="`http://localhost:4200${row.original.media[0].url}`"
+              :alt="row.original.mainText"
+              class="w-full h-full object-cover"
+            />
+            <div
+              v-else-if="
+                row.original.media?.[0]?.url &&
+                row.original.media[0]?.type === 'VIDEO'
+              "
+              class="w-full h-full flex items-center justify-center bg-neutral-900"
+            >
+              <UIcon name="i-lucide-file-video" class="w-6 h-6 text-white" />
+            </div>
+          </div>
+        </template>
+
         <template #name-cell="{ row }">
           <div class="flex flex-col">
             <span class="font-medium text-neutral-900">{{
@@ -172,6 +197,7 @@ const statusOptions = [
 const filterStatus = ref(statusOptions[0]);
 
 const columns = [
+  { id: "media", accessorKey: "media", header: "Изображение" },
   { id: "name", accessorKey: "name", header: "Название" },
   { id: "slug", accessorKey: "slug", header: "Slug" },
   { id: "isActive", accessorKey: "isActive", header: "Статус" },

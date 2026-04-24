@@ -116,6 +116,8 @@ const props = defineProps<{
   icon?: string;
 }>();
 
+console.log(props.modelValue);
+
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | null): void;
 }>();
@@ -125,16 +127,15 @@ const loading = ref(false);
 const error = ref("");
 const previewUrl = ref("");
 const isDragging = ref(false);
-const isImage = ref(
-  props.modelValue?.endsWith(".jpg") ||
-    props.modelValue?.endsWith(".png") ||
-    props.modelValue?.endsWith(".jpeg"),
-);
+const isImage = computed(() => checkIsImage(props.modelValue || ""));
 
 function getFullUrl(url: string | null | undefined) {
   if (!url) return "";
   // Если это уже полный URL (начинается с http), используем его напрямую
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (
+    typeof url === "string" &&
+    (url.startsWith("http://") || url.startsWith("https://"))
+  ) {
     return url;
   }
   // Иначе считаем это ID и получаем URL через сервис
@@ -215,5 +216,10 @@ function removeMedia() {
   previewUrl.value = "";
   emit("update:modelValue", null);
   if (fileInput.value) fileInput.value.value = "";
+}
+
+function checkIsImage(url: string) {
+  // Check if url ends with .jpg, .png, or .jpeg
+  return url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".jpeg");
 }
 </script>

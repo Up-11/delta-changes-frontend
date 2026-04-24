@@ -86,6 +86,7 @@ export interface Project {
   shortDescription?: string | null;
   isActive: boolean;
   sortOrder: number;
+  mediaId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -102,6 +103,7 @@ export interface CreateProjectDto {
   shortDescription?: string;
   isActive?: boolean;
   sortOrder?: number;
+  mediaId?: string;
 }
 
 export type UpdateProjectDto = Partial<CreateProjectDto>;

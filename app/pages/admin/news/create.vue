@@ -31,6 +31,7 @@
                 v-model="state.title"
                 size="lg"
                 placeholder="Заголовок новости"
+                class="w-full"
                 @update:model-value="generateSlug"
               />
             </UFormField>
@@ -40,6 +41,7 @@
                 v-model="state.slug"
                 size="lg"
                 placeholder="url-slug"
+                class="w-full"
                 @input="onSlugInput"
               >
                 <template #trailing>
@@ -62,6 +64,7 @@
               v-model="state.excerpt"
               size="lg"
               placeholder="Краткое описание для карточки"
+              class="w-full"
             />
           </UFormField>
 
@@ -71,6 +74,7 @@
               size="lg"
               placeholder="Полный текст новости"
               :rows="10"
+              class="w-full"
             />
           </UFormField>
         </div>
@@ -109,10 +113,13 @@
             </UFormField>
 
             <UFormField label="Статус" name="status">
-              <USelect
+              <USelectMenu
                 v-model="state.status"
-                :options="statusOptions"
+                :items="statusOptions"
                 size="lg"
+                class="w-full"
+                value-attribute="value"
+                option-attribute="label"
               />
             </UFormField>
           </div>
@@ -123,6 +130,7 @@
                 v-model="state.metaTitle"
                 size="lg"
                 placeholder="Мета заголовок"
+                class="w-full"
               />
             </UFormField>
 
@@ -131,6 +139,7 @@
                 v-model="state.metaDesc"
                 size="lg"
                 placeholder="Мета описание"
+                class="w-full"
               />
             </UFormField>
           </div>

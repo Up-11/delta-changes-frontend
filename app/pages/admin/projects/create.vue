@@ -20,7 +20,9 @@
         @submit="onSubmit"
       >
         <div class="space-y-6">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2">
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2"
+          >
             Основная информация
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -90,13 +92,31 @@
               size="lg"
               class="w-full"
               placeholder="Введите подробное описание..."
-              rows="6"
+              :rows="6"
             />
           </UFormField>
         </div>
 
         <div class="space-y-6 pt-4">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2">
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2"
+          >
+            Медиа
+          </h3>
+          <UFormField name="mediaId">
+            <AdminMediaUploader
+              v-model="mediaUrl"
+              label="Загрузить изображение"
+              icon="i-lucide-image"
+              @update:model-value="state.mediaId = $event"
+            />
+          </UFormField>
+        </div>
+
+        <div class="space-y-6 pt-4">
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2"
+          >
             Настройки
           </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
@@ -115,10 +135,7 @@
             </UFormField>
 
             <div class="flex items-center pt-4">
-              <UCheckbox
-                v-model="state.isActive"
-                label="Проект активен"
-              />
+              <UCheckbox v-model="state.isActive" label="Проект активен" />
             </div>
           </div>
         </div>
@@ -159,24 +176,60 @@ const state = reactive<CreateProjectDto>({
   shortDescription: "",
   isActive: true,
   sortOrder: 0,
+  mediaId: undefined,
 });
+
+const mediaUrl = ref<string | null>(null);
 
 const validate = (state: any) => {
   const errors: any[] = [];
-  if (!state.name) errors.push({ path: "name", message: "Название обязательно" });
+  if (!state.name)
+    errors.push({ path: "name", message: "Название обязательно" });
   if (!state.slug) errors.push({ path: "slug", message: "Slug обязателен" });
   if (state.slug && !/^[a-z0-9-]+$/.test(state.slug)) {
-    errors.push({ path: "slug", message: "Slug может содержать только латиницу, цифры и дефисы" });
+    errors.push({
+      path: "slug",
+      message: "Slug может содержать только латиницу, цифры и дефисы",
+    });
   }
   return errors;
 };
 
 function cyrillicToSlug(text: string) {
   const dictionary: Record<string, string> = {
-    а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i",
-    й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t",
-    у: "u", ф: "f", х: "h", ц: "ts", ч: "ch", ш: "sh", щ: "sch", ь: "", ы: "y", ъ: "",
-    э: "e", ю: "yu", я: "ya",
+    а: "a",
+    б: "b",
+    в: "v",
+    г: "g",
+    д: "d",
+    е: "e",
+    ё: "yo",
+    ж: "zh",
+    з: "z",
+    и: "i",
+    й: "y",
+    к: "k",
+    л: "l",
+    м: "m",
+    н: "n",
+    о: "o",
+    п: "p",
+    р: "r",
+    с: "s",
+    т: "t",
+    у: "u",
+    ф: "f",
+    х: "h",
+    ц: "ts",
+    ч: "ch",
+    ш: "sh",
+    щ: "sch",
+    ь: "",
+    ы: "y",
+    ъ: "",
+    э: "e",
+    ю: "yu",
+    я: "ya",
   };
 
   return text

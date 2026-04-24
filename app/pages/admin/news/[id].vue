@@ -46,6 +46,7 @@
                 v-model="state.title"
                 size="lg"
                 placeholder="Заголовок новости"
+                class="w-full"
                 @update:model-value="generateSlug"
               />
             </UFormField>
@@ -55,6 +56,7 @@
                 v-model="state.slug"
                 size="lg"
                 placeholder="url-slug"
+                class="w-full"
                 @input="onSlugInput"
               >
                 <template #trailing>
@@ -77,6 +79,7 @@
               v-model="state.excerpt"
               size="lg"
               placeholder="Краткое описание для карточки"
+              class="w-full"
             />
           </UFormField>
 
@@ -86,6 +89,7 @@
               size="lg"
               placeholder="Полный текст новости"
               :rows="10"
+              class="w-full"
             />
           </UFormField>
         </div>
@@ -124,10 +128,13 @@
             </UFormField>
 
             <UFormField label="Статус" name="status">
-              <USelect
+              <USelectMenu
                 v-model="state.status"
-                :options="statusOptions"
+                :items="statusOptions"
                 size="lg"
+                class="w-full"
+                value-attribute="value"
+                option-attribute="label"
               />
             </UFormField>
           </div>
@@ -138,6 +145,7 @@
                 v-model="state.metaTitle"
                 size="lg"
                 placeholder="Мета заголовок"
+                class="w-full"
               />
             </UFormField>
 
@@ -146,6 +154,7 @@
                 v-model="state.metaDesc"
                 size="lg"
                 placeholder="Мета описание"
+                class="w-full"
               />
             </UFormField>
           </div>
@@ -190,7 +199,7 @@ const state = reactive<{
   content: string;
   excerpt?: string;
   publishedAt?: string;
-  status?: string;
+  status?: { label: string; value: string };
   metaTitle?: string;
   metaDesc?: string;
   mediaIds?: string[];
@@ -200,7 +209,7 @@ const state = reactive<{
   content: "",
   excerpt: undefined,
   publishedAt: undefined,
-  status: "DRAFT",
+  status: { label: "Черновик", value: "DRAFT" },
   metaTitle: undefined,
   metaDesc: undefined,
   mediaIds: undefined,
@@ -226,7 +235,12 @@ onMounted(async () => {
       publishedAt: data.publishedAt
         ? new Date(data.publishedAt).toISOString().slice(0, 16)
         : undefined,
-      status: data.status,
+      status: {
+        label:
+          statusOptions.find((s) => s.value === data.status)?.label ||
+          "Черновик",
+        value: data.status,
+      },
       metaTitle: data.metaTitle ?? undefined,
       metaDesc: data.metaDesc ?? undefined,
       mediaIds: data.media?.map((m) => m.id) ?? undefined,
@@ -328,7 +342,17 @@ async function onSubmit() {
 
   loading.value = true;
   try {
-    await newsService.update(id, state as UpdateNewsDto);
+    await newsService.update(id, {
+      title: state.title,
+      slug: state.slug,
+      content: state.content,
+      excerpt: state.excerpt,
+      publishedAt: state.publishedAt,
+      status: state.status!.value!,
+      metaTitle: state.metaTitle,
+      metaDesc: state.metaDesc,
+      mediaIds: state.mediaIds,
+    });
 
     toast.add({
       title: "Успех",

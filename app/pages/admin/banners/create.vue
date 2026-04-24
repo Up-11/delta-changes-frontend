@@ -43,11 +43,11 @@
             </UFormField>
           </div>
 
-          <UFormField label="Изображение" name="mediaId">
-            <AdminImageUploader
+          <UFormField label="Медиа" name="mediaId">
+            <AdminMediaUploader
               v-model="state.mediaId"
-              label="Загрузить изображение"
-              icon="i-lucide-image"
+              label="Загрузить изображение или видео"
+              icon="i-lucide-file-video"
             />
           </UFormField>
         </div>

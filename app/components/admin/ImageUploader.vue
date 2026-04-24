@@ -120,7 +120,10 @@ const isDragging = ref(false);
 function getFullUrl(url: string | null | undefined) {
   if (!url) return "";
   // Если это уже полный URL (начинается с http), используем его напрямую
-  if (url.startsWith("http://") || url.startsWith("https://")) {
+  if (
+    typeof url === "string" &&
+    (url.startsWith("http://") || url.startsWith("https://"))
+  ) {
     return url;
   }
   // Иначе считаем это ID и получаем URL через сервис
