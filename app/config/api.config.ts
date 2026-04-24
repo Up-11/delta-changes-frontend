@@ -15,7 +15,7 @@ export function getApiBaseUrl(): string {
 }
 
 /** Default fallback base URL */
-export const DEFAULT_API_BASE_URL = "http://localhost:3000";
+export const DEFAULT_API_BASE_URL = "http://localhost:4200";
 
 /** Helper to build full URL */
 export function buildApiUrl(endpoint: string): string {
@@ -282,6 +282,23 @@ export const API_ENDPOINTS = {
       path: (id: string) => `/applications/${id}`,
       access: "admin" as const,
       description: "Delete application by id",
+    },
+  },
+
+  /** Dashboard module - Admin dashboard stats */
+  dashboard: {
+    base: "/dashboard",
+    stats: {
+      method: "GET" as const,
+      path: "/dashboard/stats",
+      access: "admin" as const,
+      description: "Get dashboard statistics",
+    },
+    recentApplications: {
+      method: "GET" as const,
+      path: "/dashboard/recent-applications",
+      access: "admin" as const,
+      description: "Get recent applications",
     },
   },
 

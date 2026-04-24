@@ -14,9 +14,29 @@
       </UButton>
     </div>
 
+    <!-- Фильтры -->
+    <div class="flex flex-col sm:flex-row gap-4">
+      <UInput
+        v-model="search"
+        placeholder="Поиск по названию или адресу..."
+        icon="i-lucide-search"
+        class="flex-1"
+        size="lg"
+      />
+      <USelectMenu
+        v-model="filterProject"
+        :items="projectOptions"
+        value-attribute="id"
+        option-attribute="label"
+        placeholder="Без фильтра по проекту"
+        size="lg"
+        class="w-full sm:w-64"
+      />
+    </div>
+
     <UCard class="border border-neutral-200 shadow-none" :ui="{ body: 'p-0' }">
       <div
-        v-if="!objects?.length"
+        v-if="!filteredObjects?.length"
         class="text-center py-24 flex flex-col items-center justify-center bg-neutral-50/30"
       >
         <div
@@ -28,13 +48,23 @@
           />
         </div>
         <p class="text-sm font-bold uppercase tracking-wider text-neutral-900">
-          Список объектов пуст
+          {{
+            search || filterProject?.id !== "ALL"
+              ? "Объекты не найдены"
+              : "Список объектов пуст"
+          }}
         </p>
-        <p class="text-xs mt-2 text-neutral-400 max-w-[240px] leading-relaxed">
-          У вас пока нет созданных объектов. Добавьте первый объект, чтобы
-          начать работу.
+        <p
+          class="text-xs mt-2 text-neutral-400 max-w-60 leading-relaxed uppercase"
+        >
+          {{
+            search || filterProject?.id !== "ALL"
+              ? "Попробуйте изменить параметры фильтрации"
+              : "Добавьте первый объект, чтобы начать работу."
+          }}
         </p>
         <UButton
+          v-if="!search && filterProject?.id === 'ALL'"
           color="primary"
           class="mt-6 text-xs uppercase tracking-wider px-6"
           @click="navigateTo('/admin/objects/create')"
@@ -43,7 +73,7 @@
         </UButton>
       </div>
 
-      <UTable v-else :data="objects" :columns="columns" class="w-full">
+      <UTable v-else :data="filteredObjects" :columns="columns" class="w-full">
         <template #name-cell="{ row }">
           <div class="flex flex-col">
             <span class="font-medium text-neutral-900">{{
@@ -58,6 +88,12 @@
           </div>
         </template>
         <!-- ... остальное содержимое слотов остается без изменений ... -->
+        <template #projectName-cell="{ row }">
+          <span class="text-neutral-600 text-sm">
+            {{ (row.original as any).project?.name || "—" }}
+          </span>
+        </template>
+
         <template #slug-cell="{ row }">
           <span class="text-neutral-600 text-sm font-mono">{{
             row.original.slug
@@ -134,6 +170,7 @@
 
 <script setup lang="ts">
 import { objectsService } from "~/api/objects.service";
+import { projectsService } from "~/api/projects.service";
 import type { Object as IObject } from "~/api/types";
 
 definePageMeta({
@@ -141,9 +178,28 @@ definePageMeta({
 });
 
 const toast = useToast();
+const search = ref("");
+
+const { data: projectsData } = await useAsyncData("projects-list", () =>
+  projectsService.getAll(),
+);
+
+const projectOptions = computed(() => {
+  const options = [{ label: "Все проекты", id: "ALL" }];
+  if (projectsData.value) {
+    projectsData.value.forEach((p) => {
+      options.push({ label: p.name, id: p.id });
+    });
+  }
+  return options;
+});
+
+const filterProject = ref(projectOptions.value[0]);
+
 const columns = [
   { id: "name", accessorKey: "name", header: "Название" },
   { id: "slug", accessorKey: "slug", header: "Slug" },
+  { id: "projectName", accessorKey: "projectName", header: "Проект" },
   { id: "address", accessorKey: "address", header: "Адрес" },
   { id: "coordinates", accessorKey: "coordinates", header: "Координаты" },
   { id: "actions", accessorKey: "actions", header: "", width: "100px" },
@@ -152,6 +208,29 @@ const columns = [
 const { data: objects, refresh } = await useAsyncData("objects", () =>
   objectsService.getAll(),
 );
+
+const filteredObjects = computed(() => {
+  if (!objects.value) return [];
+
+  const objectsWithRelations = objects.value.map((obj) => {
+    const project = projectsData.value?.find((p) => p.id === obj.projectId);
+    return { ...obj, project };
+  });
+
+  return objectsWithRelations.filter((obj) => {
+    const matchesSearch =
+      obj.name.toLowerCase().includes(search.value.toLowerCase()) ||
+      (obj.address &&
+        obj.address.toLowerCase().includes(search.value.toLowerCase())) ||
+      obj.slug.toLowerCase().includes(search.value.toLowerCase());
+
+    const matchesProject =
+      filterProject.value?.id === "ALL" ||
+      obj.projectId === filterProject.value?.id;
+
+    return matchesSearch && matchesProject;
+  });
+});
 
 const isDeleteModalOpen = ref(false);
 const objectToDelete = ref<IObject | null>(null);

@@ -201,7 +201,6 @@ const navigation = [
   { path: "/admin/banners", label: "Баннеры", icon: "i-lucide-image" },
   { path: "/admin/news", label: "Новости", icon: "i-lucide-newspaper" },
   { path: "/admin/applications", label: "Заявки", icon: "i-lucide-inbox" },
-  { path: "/admin/uploads", label: "Файлы", icon: "i-lucide-upload" },
 ];
 
 function isActive(path: string): boolean {

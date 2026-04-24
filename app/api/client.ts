@@ -51,9 +51,13 @@ export async function apiClient<T>(
   const url = `${getApiBaseUrl()}${endpoint}`;
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...((fetchOptions.headers as Record<string, string>) || {}),
   };
+
+  // Only set JSON Content-Type if not sending FormData
+  if (!(body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
 
   // Add auth token for protected endpoints
   if (!skipAuth) {
@@ -67,8 +71,13 @@ export async function apiClient<T>(
     return await $fetch<T>(url, {
       ...fetchOptions,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
-    });
+      body:
+        body instanceof FormData
+          ? body
+          : body
+            ? JSON.stringify(body)
+            : undefined,
+    } as any);
   } catch (error: unknown) {
     // Handle API errors
     const apiError = error as ApiErrorResponse;
@@ -119,7 +128,6 @@ export const api = {
       ...options,
       method: "POST",
       body: formData,
-      headers: {}, // Let browser set Content-Type with boundary
     }),
 };
 

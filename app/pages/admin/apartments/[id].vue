@@ -8,15 +8,30 @@
         @click="navigateTo('/admin/apartments')"
       />
       <h2 class="text-sm font-bold uppercase tracking-widest text-neutral-900">
-        Создать квартиру
+        Редактировать квартиру
       </h2>
     </div>
 
-    <UCard class="border border-neutral-200 shadow-none">
+    <UCard class="border border-neutral-200 shadow-none relative">
+      <!-- Loading overlay -->
+      <div
+        v-if="!isDataLoaded"
+        class="absolute inset-0 bg-white/80 flex items-center justify-center z-10"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <UIcon
+            name="i-lucide-loader-2"
+            class="w-8 h-8 animate-spin text-primary"
+          />
+          <span class="text-sm text-neutral-500">Загрузка данных...</span>
+        </div>
+      </div>
+
       <UForm
         :state="state"
         :validate="validate"
         class="space-y-8"
+        :disabled="!isDataLoaded"
         @submit="onSubmit"
       >
         <!-- Привязки -->
@@ -263,25 +278,28 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <UFormField label="Планировка" name="layoutPhotoId">
               <AdminImageUploader
-                v-model="state.layoutPhotoId"
+                v-model="layoutPhotoUrl"
                 label="Загрузить планировку"
                 icon="i-lucide-layout"
+                @update:model-value="state.layoutPhotoId = $event"
               />
             </UFormField>
 
             <UFormField label="План этажа" name="floorPlanPhotoId">
               <AdminImageUploader
-                v-model="state.floorPlanPhotoId"
+                v-model="floorPlanPhotoUrl"
                 label="Загрузить план этажа"
                 icon="i-lucide-layers"
+                @update:model-value="state.floorPlanPhotoId = $event"
               />
             </UFormField>
 
             <UFormField label="Генплан" name="masterPlanPhotoId">
               <AdminImageUploader
-                v-model="state.masterPlanPhotoId"
+                v-model="masterPlanPhotoUrl"
                 label="Загрузить генплан"
                 icon="i-lucide-map"
+                @update:model-value="state.masterPlanPhotoId = $event"
               />
             </UFormField>
           </div>
@@ -296,7 +314,7 @@
             Отмена
           </UButton>
           <UButton type="submit" color="primary" :loading="loading">
-            Создать квартиру
+            Сохранить изменения
           </UButton>
         </div>
       </UForm>
@@ -306,12 +324,17 @@
 
 <script setup lang="ts">
 import { apartmentsService } from "~/api/apartments.service";
+import { projectsService } from "~/api/projects.service";
+import { objectsService } from "~/api/objects.service";
 import { FinishingType } from "~/api/types";
-import type { CreateApartmentDto } from "~/api/types";
+import type { UpdateApartmentDto } from "~/api/types";
 
 definePageMeta({
   layout: "admin",
 });
+
+const route = useRoute();
+const id = route.params.id as string;
 
 const loading = ref(false);
 const toast = useToast();
@@ -330,7 +353,24 @@ const finishingOptions = [
 
 const selectedFinishing = ref(finishingOptions[0]);
 
-const state = reactive<CreateApartmentDto>({
+const state = reactive<{
+  number: string;
+  price: number;
+  projectId: string;
+  objectId: string;
+  area?: number | null;
+  rooms?: number | null;
+  building?: string | null;
+  entrance?: string | null;
+  floor: number;
+  floorTotal: number;
+  finishing?: FinishingType | null;
+  isAvailable: boolean;
+  sortOrder: number;
+  layoutPhotoId?: string | null;
+  floorPlanPhotoId?: string | null;
+  masterPlanPhotoId?: string | null;
+}>({
   number: "",
   price: 0,
   projectId: "",
@@ -347,6 +387,68 @@ const state = reactive<CreateApartmentDto>({
   layoutPhotoId: null,
   floorPlanPhotoId: null,
   masterPlanPhotoId: null,
+});
+
+// Separate refs for URL display (ImageUploader needs URLs for preview)
+const layoutPhotoUrl = ref<string | null>(null);
+const floorPlanPhotoUrl = ref<string | null>(null);
+const masterPlanPhotoUrl = ref<string | null>(null);
+const isDataLoaded = ref(false);
+
+onMounted(async () => {
+  try {
+    const [data, projects, objects] = await Promise.all([
+      apartmentsService.getById(id),
+      projectsService.getAll(),
+      objectsService.getAll(),
+    ]);
+
+    Object.assign(state, {
+      number: data.number,
+      price: data.price,
+      projectId: data.projectId,
+      objectId: data.objectId,
+      area: data.area ?? 0,
+      rooms: data.rooms ?? 1,
+      building: data.building ?? "",
+      entrance: data.entrance ?? "",
+      floor: data.floor,
+      floorTotal: data.floorTotal,
+      finishing: data.finishing ?? FinishingType.NONE,
+      isAvailable: data.isAvailable,
+      sortOrder: data.sortOrder,
+      layoutPhotoId: data.layoutPhoto?.id ?? null,
+      floorPlanPhotoId: data.floorPlanPhoto?.id ?? null,
+      masterPlanPhotoId: data.masterPlanPhoto?.id ?? null,
+    });
+
+    // Set URLs for preview
+    layoutPhotoUrl.value = data.layoutPhoto?.url ?? null;
+    floorPlanPhotoUrl.value = data.floorPlanPhoto?.url ?? null;
+    masterPlanPhotoUrl.value = data.masterPlanPhoto?.url ?? null;
+
+    // Set selected finishing option
+    const finishingOption = finishingOptions.find(
+      (opt) => opt.value === data.finishing,
+    );
+    if (finishingOption) selectedFinishing.value = finishingOption;
+
+    // Устанавливаем имена для отображения
+    const proj = projects.find((p) => p.id === data.projectId);
+    if (proj) selectedProjectName.value = proj.name;
+
+    const obj = objects.find((o) => o.id === data.objectId);
+    if (obj) selectedObjectName.value = obj.name;
+
+    isDataLoaded.value = true;
+  } catch (error: any) {
+    console.error("Failed to load apartment:", error);
+    toast.add({
+      title: "Ошибка",
+      description: "Не удалось загрузить данные квартиры",
+      color: "primary",
+    });
+  }
 });
 
 const validate = (state: any) => {
@@ -379,20 +481,20 @@ async function onSubmit() {
       ...state,
       finishing: selectedFinishing.value?.value || FinishingType.NONE,
     };
-    await apartmentsService.create(submitData);
+    await apartmentsService.update(id, submitData as UpdateApartmentDto);
 
     toast.add({
       title: "Успех",
-      description: "Квартира успешно создана",
+      description: "Квартира успешно обновлена",
       color: "primary",
     });
 
     navigateTo("/admin/apartments");
   } catch (error: any) {
-    console.error("Failed to create apartment:", error);
+    console.error("Failed to update apartment:", error);
     toast.add({
       title: "Ошибка",
-      description: error.message || "Не удалось создать квартиру",
+      description: error.message || "Не удалось обновить квартиру",
       color: "primary",
     });
   } finally {

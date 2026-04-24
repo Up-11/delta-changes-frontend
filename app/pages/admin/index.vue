@@ -173,14 +173,42 @@
 </template>
 
 <script setup lang="ts">
+import { dashboardService } from "~/api/dashboard.service";
+
 definePageMeta({
   layout: "admin",
 });
 
-const stats = [
+// Fetch real data from backend
+const { data: statsData } = await useAsyncData("dashboard-stats", async () => {
+  try {
+    const data = await dashboardService.getStats();
+    console.log("Stats loaded:", data);
+    return data;
+  } catch (error) {
+    console.error("Failed to load stats:", error);
+    return { objects: 0, apartments: 0, applications: 0, news: 0 };
+  }
+});
+
+const { data: applications } = await useAsyncData(
+  "dashboard-applications",
+  async () => {
+    try {
+      const data = await dashboardService.getRecentApplications();
+      console.log("Applications loaded:", data);
+      return data;
+    } catch (error) {
+      console.error("Failed to load applications:", error);
+      return [];
+    }
+  },
+);
+
+const stats = computed(() => [
   {
     label: "Всего объектов",
-    value: "12",
+    value: statsData.value?.objects || 0,
     trend: 8,
     icon: "i-lucide-building-2",
     bgClass: "bg-neutral-100",
@@ -188,7 +216,7 @@ const stats = [
   },
   {
     label: "Доступные квартиры",
-    value: "48",
+    value: statsData.value?.apartments || 0,
     trend: 12,
     icon: "i-lucide-door-open",
     bgClass: "bg-neutral-100",
@@ -196,7 +224,7 @@ const stats = [
   },
   {
     label: "Новые заявки",
-    value: "5",
+    value: statsData.value?.applications || 0,
     trend: -2,
     icon: "i-lucide-inbox",
     bgClass: "bg-neutral-100",
@@ -204,100 +232,28 @@ const stats = [
   },
   {
     label: "Публикаций",
-    value: "24",
+    value: statsData.value?.news || 0,
     trend: 4,
     icon: "i-lucide-newspaper",
     bgClass: "bg-neutral-100",
     iconClass: "text-neutral-700",
   },
-];
+]);
 
-const recentApplications = [
-  {
-    id: 1,
-    name: "Иван Петров",
-    email: "ivan.petrov@mail.ru",
-    phone: "+7 (999) 123-45-67",
-    type: "Квартира",
-    object: "ЖК Северный",
-    message: "Интересует 2-комнатная квартира с видом на парк",
-    status: "new",
-    date: "2024-01-15 14:30",
-    ip: "192.168.1.105",
-  },
-  {
-    id: 2,
-    name: "Мария Сидорова",
-    email: "maria.s@yandex.ru",
-    phone: "+7 (999) 987-65-43",
-    type: "Объект",
-    object: "Торговый центр Восток",
-    message: "Хочу арендовать помещение 50м² для магазина",
-    status: "processed",
-    date: "2024-01-15 10:15",
-    ip: "192.168.1.88",
-  },
-  {
-    id: 3,
-    name: "Алексей Иванов",
-    email: "alex.ivanov@gmail.com",
-    phone: "+7 (999) 456-78-90",
-    type: "Квартира",
-    object: "ЖК Западный",
-    message: "Подбор квартиры для семьи с детьми, бюджет до 15 млн",
-    status: "new",
-    date: "2024-01-14 16:45",
-    ip: "192.168.1.132",
-  },
-  {
-    id: 4,
-    name: "Елена Козлова",
-    email: "elena.k@outlook.com",
-    phone: "+7 (999) 111-22-33",
-    type: "Проект",
-    object: "ЖК Южный квартал",
-    message: "Инвестиции в строительство, рассматриваю опции",
-    status: "processed",
-    date: "2024-01-14 09:20",
-    ip: "192.168.1.77",
-  },
-  {
-    id: 5,
-    name: "Дмитрий Новиков",
-    email: "dmitry.novikov@mail.ru",
-    phone: "+7 (999) 444-55-66",
-    type: "Квартира",
-    object: "ЖК Центральный",
-    message: "Продажа текущей квартиры и покупка новой",
-    status: "new",
-    date: "2024-01-13 11:30",
-    ip: "192.168.1.201",
-  },
-  {
-    id: 6,
-    name: "Анна Смирнова",
-    email: "anna.smirnova@yandex.ru",
-    phone: "+7 (999) 777-88-99",
-    type: "Квартира",
-    object: "ЖК Северный",
-    message: "Ипотека, первоначальный взнос 30%",
-    status: "new",
-    date: "2024-01-13 08:45",
-    ip: "192.168.1.156",
-  },
-  {
-    id: 7,
-    name: "Сергей Волков",
-    email: "sergey.volkov@gmail.com",
-    phone: "+7 (999) 222-33-44",
-    type: "Объект",
-    object: "Складской комплекс Логистик",
-    message: "Аренда склада 200м² с офисом",
-    status: "processed",
-    date: "2024-01-12 15:20",
-    ip: "192.168.1.43",
-  },
-];
+const recentApplications = computed(() => {
+  if (!applications || !Array.isArray(applications)) return [];
+  return applications.slice(0, 5).map((app) => ({
+    id: app.id,
+    name: app.name || "Не указано",
+    email: app.email || "Не указано",
+    phone: app.phone || "Не указано",
+    type: app.type || "OTHER",
+    message: app.message || "",
+    status: app.status || "NEW",
+    date: new Date(app.createdAt).toLocaleString("ru-RU"),
+    ip: app.ipAddress || "—",
+  }));
+});
 
 const applicationColumns = [
   { id: "name", key: "name", label: "Клиент" },
@@ -323,6 +279,5 @@ const quickActions = [
     path: "/admin/news",
     icon: "i-lucide-newspaper",
   },
-  { label: "Загрузить файл", path: "/admin/uploads", icon: "i-lucide-upload" },
 ];
 </script>

@@ -12,18 +12,26 @@
       </h2>
     </div>
 
-    <div v-if="pending" class="flex justify-center py-12">
-      <UIcon
-        name="i-lucide-loader-2"
-        class="w-8 h-8 animate-spin text-primary"
-      />
-    </div>
+    <UCard class="border border-neutral-200 shadow-none relative">
+      <!-- Loading overlay -->
+      <div
+        v-if="!isDataLoaded"
+        class="absolute inset-0 bg-white/80 flex items-center justify-center z-10"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <UIcon
+            name="i-lucide-loader-2"
+            class="w-8 h-8 animate-spin text-primary"
+          />
+          <span class="text-sm text-neutral-500">Загрузка данных...</span>
+        </div>
+      </div>
 
-    <UCard v-else class="border border-neutral-200 shadow-none">
       <UForm
         :state="state"
         :validate="validate"
         class="space-y-8"
+        :disabled="!isDataLoaded"
         @submit="onSubmit"
       >
         <!-- Основная информация -->
@@ -311,6 +319,7 @@ const isSlugManual = ref(true); // Для редактирования по ум
 const mapPicker = ref<any>(null);
 const isProjectModalOpen = ref(false);
 const selectedProjectName = ref("");
+const isDataLoaded = ref(false);
 const toast = useToast();
 
 const { data: projects } = await useAsyncData("projects-list", () =>
@@ -341,28 +350,37 @@ const state = reactive<{
   projectId: "",
 });
 
-const { pending } = await useAsyncData(`object-${id}`, async () => {
-  const data = await objectsService.getById(id);
-  Object.assign(state, {
-    name: data.name,
-    slug: data.slug,
-    description: data.description || "",
-    shortDescription: data.shortDescription || "",
-    address: data.address || "",
-    latitude: data.latitude || undefined,
-    longitude: data.longitude || undefined,
-    isActive: data.isActive,
-    sortOrder: data.sortOrder,
-    projectId: data.projectId || "",
-  });
+onMounted(async () => {
+  try {
+    const data = await objectsService.getById(id);
+    Object.assign(state, {
+      name: data.name,
+      slug: data.slug,
+      description: data.description || "",
+      shortDescription: data.shortDescription || "",
+      address: data.address || "",
+      latitude: data.latitude || undefined,
+      longitude: data.longitude || undefined,
+      isActive: data.isActive,
+      sortOrder: data.sortOrder,
+      projectId: data.projectId || "",
+    });
 
-  // Устанавливаем имя проекта для отображения
-  if (data.projectId && projects.value) {
-    const proj = projects.value.find((p) => p.id === data.projectId);
-    if (proj) selectedProjectName.value = proj.name;
+    // Устанавливаем имя проекта для отображения
+    if (data.projectId && projects.value) {
+      const proj = projects.value.find((p) => p.id === data.projectId);
+      if (proj) selectedProjectName.value = proj.name;
+    }
+
+    isDataLoaded.value = true;
+  } catch (error: any) {
+    console.error("Failed to load object:", error);
+    toast.add({
+      title: "Ошибка",
+      description: "Не удалось загрузить данные объекта",
+      color: "primary",
+    });
   }
-
-  return data;
 });
 
 function onProjectSelect(project: any) {

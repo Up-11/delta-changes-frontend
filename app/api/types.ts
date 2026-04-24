@@ -63,7 +63,7 @@ export interface Banner {
 }
 
 export interface BannerWithRelations extends Banner {
-  media?: Media | null;
+  media?: Media[] | null;
 }
 
 export interface CreateBannerDto {
@@ -240,6 +240,9 @@ export interface CreateApartmentDto {
   finishing?: FinishingType;
   isAvailable?: boolean;
   sortOrder?: number;
+  layoutPhotoId?: string | null;
+  floorPlanPhotoId?: string | null;
+  masterPlanPhotoId?: string | null;
 }
 
 export type UpdateApartmentDto = Partial<CreateApartmentDto>;
@@ -279,8 +282,10 @@ export interface News {
   slug: string;
   content: string;
   excerpt?: string | null;
-  isPublished: boolean;
   publishedAt?: string | null;
+  status: string;
+  metaTitle?: string | null;
+  metaDesc?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -294,8 +299,11 @@ export interface CreateNewsDto {
   slug: string;
   content: string;
   excerpt?: string;
-  isPublished?: boolean;
   publishedAt?: string;
+  status?: string;
+  metaTitle?: string;
+  metaDesc?: string;
+  mediaIds?: string[];
 }
 
 export type UpdateNewsDto = Partial<CreateNewsDto>;
