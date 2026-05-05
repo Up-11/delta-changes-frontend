@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   modules: ["@nuxt/eslint", "@nuxt/ui", "@nuxt/image"],
 
   devtools: {
-    enabled: true,
+    enabled: false,
   },
 
   css: ["~/assets/css/main.css"],
@@ -25,7 +25,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl:
-        process.env.NUXT_PUBLIC_API_BASE_URL || "http://localhost:4200",
+        process.env.NUXT_PUBLIC_API_BASE_URL ||
+        "https://jvzp9vk6-4200.euw.devtunnels.ms",
     },
   },
 

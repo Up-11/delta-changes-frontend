@@ -159,6 +159,9 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: "Админ панель",
+});
 const route = useRoute();
 const { isAuthenticated, logout, fetchProfile } = useAuth();
 const toast = useToast();
@@ -200,6 +203,8 @@ const navigation = [
   { path: "/admin/projects", label: "Проекты", icon: "i-lucide-hard-hat" },
   { path: "/admin/banners", label: "Баннеры", icon: "i-lucide-image" },
   { path: "/admin/news", label: "Новости", icon: "i-lucide-newspaper" },
+  { path: "/admin/managers", label: "Менеджеры", icon: "i-lucide-users" },
+  { path: "/admin/about", label: "О компании", icon: "i-lucide-building" },
   { path: "/admin/applications", label: "Заявки", icon: "i-lucide-inbox" },
 ];
 

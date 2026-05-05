@@ -39,7 +39,7 @@ const initMap = () => {
   if (!window.ymaps) return;
 
   window.ymaps.ready(() => {
-    const center = [props.lat || 55.7558, props.lng || 37.6173];
+    const center = [props.lat || 56.0184, props.lng || 92.8672];
 
     map = new window.ymaps.Map(mapContainer.value, {
       center,

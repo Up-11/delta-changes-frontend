@@ -16,16 +16,19 @@
       @click="triggerFileInput"
     >
       <!-- Preview -->
-      <template v-if="previewUrl || modelValue">
+      <template v-if="hasMediaContent">
         <img
-          v-if="isImage"
-          :src="previewUrl || getFullUrl(modelValue)"
+          v-if="
+            fileType === 'image' ||
+            (fileType === null && checkIsImageByUrl(getResolvedUrl()))
+          "
+          :src="previewUrl || getResolvedUrl()"
           class="absolute inset-0 w-full h-full object-cover"
           alt="Preview"
         />
         <video
-          v-else
-          :src="previewUrl || getFullUrl(modelValue)"
+          v-else-if="fileType === 'video' || hasMediaContent"
+          :src="previewUrl || getResolvedUrl()"
           class="absolute inset-0 w-full h-full object-cover"
           muted
           autoplay
@@ -108,18 +111,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { uploadsService } from "~/api/uploads.service";
 
 const props = defineProps<{
-  modelValue?: string | null;
+  modelValue?: string | string[] | any | any[] | null;
   label?: string;
   icon?: string;
+  multiple?: boolean;
 }>();
 
 console.log(props.modelValue);
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string | null): void;
+  (e: "update:modelValue", value: string | string[] | null): void;
 }>();
 
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -127,21 +132,105 @@ const loading = ref(false);
 const error = ref("");
 const previewUrl = ref("");
 const isDragging = ref(false);
-const isImage = computed(() => checkIsImage(props.modelValue || ""));
+const isImage = ref(false);
+const fileType = ref<"image" | "video" | null>(null);
+
+// Debug logging
+watch(
+  () => props.modelValue,
+  (val) => {
+    console.log("[MediaUploader] modelValue changed:", val);
+  },
+  { immediate: true, deep: true },
+);
+
+// Computed property to check if there's actual media to display
+const hasMediaContent = computed(() => {
+  console.log("[MediaUploader] hasMediaContent check:", props.modelValue);
+  if (previewUrl.value) return true;
+  if (!props.modelValue) return false;
+  // Handle arrays - check if array has content
+  if (Array.isArray(props.modelValue)) {
+    const result =
+      props.modelValue.length > 0 &&
+      props.modelValue[0] !== null &&
+      props.modelValue[0] !== undefined &&
+      props.modelValue[0] !== "";
+    console.log(
+      "[MediaUploader] Array check result:",
+      result,
+      "first item:",
+      props.modelValue[0],
+    );
+    return result;
+  }
+  // Handle objects - check if it has a url or id
+  if (typeof props.modelValue === "object") {
+    const result =
+      props.modelValue !== null &&
+      (props.modelValue.url || props.modelValue.id);
+    console.log(
+      "[MediaUploader] Object check result:",
+      result,
+      "url:",
+      props.modelValue?.url,
+    );
+    return result;
+  }
+  // Handle strings - check if not empty
+  return typeof props.modelValue === "string" && props.modelValue.length > 0;
+});
+
+function getResolvedUrl() {
+  if (previewUrl.value) return previewUrl.value;
+  const value = Array.isArray(props.modelValue)
+    ? props.modelValue[0]
+    : props.modelValue;
+
+  if (!value) return "";
+
+  // If it's an object with url property (from API include)
+  if (typeof value === "object" && value !== null) {
+    const obj = value as any;
+    if (obj.url) return getFullUrl(obj.url);
+  }
+
+  // If it's a string (likely ID or URL)
+  if (typeof value === "string") {
+    return getFullUrl(value);
+  }
+
+  return "";
+}
 
 function getFullUrl(url: string | null | undefined) {
   if (!url) return "";
-  // Если это уже полный URL (начинается с http), используем его напрямую
+
+  const urlStr = String(url);
+
+  // If it's already a full URL or data URL
   if (
-    typeof url === "string" &&
-    (url.startsWith("http://") || url.startsWith("https://"))
+    urlStr.startsWith("http://") ||
+    urlStr.startsWith("https://") ||
+    urlStr.startsWith("data:")
   ) {
-    return url;
+    return urlStr;
   }
-  // Иначе считаем это ID и получаем URL через сервис
-  const fileUrl = uploadsService.getFileUrl(url);
-  console.log(fileUrl);
-  return fileUrl;
+
+  // If it's a UUID (36 chars, with hyphens) - we can't resolve it sync,
+  // but let's try to see if it's a filename first
+  if (urlStr.includes(".") && !urlStr.includes("/")) {
+    return uploadsService.getFileUrl(urlStr);
+  }
+
+  // If it starts with /uploads or similar (relative path from API)
+  if (urlStr.startsWith("/")) {
+    return uploadsService.getFileUrl(urlStr);
+  }
+
+  // Otherwise, assume it's a filename that needs prepending
+  // or return as is if we're not sure
+  return uploadsService.getFileUrl(urlStr);
 }
 
 function triggerFileInput() {
@@ -161,7 +250,8 @@ async function handleFileUpload(file: File) {
 
   loading.value = true;
   error.value = "";
-  isImage.value = file.type.startsWith("image/");
+  isImage.value = checkIsImage(file);
+  fileType.value = isImage.value ? "image" : "video";
 
   // Создаем локальное превью
   const reader = new FileReader();
@@ -177,8 +267,15 @@ async function handleFileUpload(file: File) {
     } else {
       res = await uploadsService.uploadVideo(file);
     }
-    // Предполагаем, что бэкенд возвращает ID или URL, который мы сохраняем в модель
-    emit("update:modelValue", res.id);
+
+    if (props.multiple) {
+      // Append to array - emit only media ID
+      const current = Array.isArray(props.modelValue) ? props.modelValue : [];
+      emit("update:modelValue", [...current, res.id]);
+    } else {
+      // Single mode - emit only media ID
+      emit("update:modelValue", res.id);
+    }
   } catch (err: any) {
     console.error("Upload error:", err);
     error.value = "Ошибка загрузки";
@@ -214,12 +311,36 @@ function onDrop(e: DragEvent) {
 
 function removeMedia() {
   previewUrl.value = "";
-  emit("update:modelValue", null);
+  fileType.value = null;
+  isImage.value = false;
+  // For multiple mode, emit empty array; for single mode, emit null
+  if (props.multiple) {
+    emit("update:modelValue", []);
+  } else {
+    emit("update:modelValue", null);
+  }
   if (fileInput.value) fileInput.value.value = "";
 }
 
-function checkIsImage(url: string) {
-  // Check if url ends with .jpg, .png, or .jpeg
-  return url.endsWith(".jpg") || url.endsWith(".png") || url.endsWith(".jpeg");
+function checkIsImage(file: File): boolean {
+  return file.type.startsWith("image/");
+}
+
+function checkIsImageByUrl(url: string): boolean {
+  if (!url) return false;
+  const lowerUrl = url.toLowerCase();
+  const imageExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".avif",
+    ".bmp",
+    ".svg",
+    ".heic",
+    ".heif",
+  ];
+  return imageExtensions.some((ext) => lowerUrl.endsWith(ext));
 }
 </script>

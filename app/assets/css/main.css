@@ -1,8 +1,25 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Global font settings for elongated/condensed appearance */
+html,
+body {
+  font-family: var(--font-sans);
+  font-stretch: condensed;
+  letter-spacing: 0.02em;
+}
+
+/* Utility for extra condensed text */
+.font-condensed {
+  font-family: var(--font-condensed);
+  font-stretch: condensed;
+  letter-spacing: 0.05em;
+}
+
 @theme static {
-  --font-sans: "Inter", "Public Sans", sans-serif;
+  --font-sans: "Inter", "Arial Narrow", "Helvetica Condensed", sans-serif;
+  --font-condensed:
+    "Arial Narrow", "Helvetica Condensed", "Roboto Condensed", sans-serif;
 
   /* Black & White / Gray scale */
   --color-neutral-50: #fafafa;

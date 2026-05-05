@@ -230,6 +230,23 @@
             <UFormField label="Корпус/Секция" name="building">
               <UInput v-model="state.building" size="lg" placeholder="А" />
             </UFormField>
+
+            <UFormField label="Подъезд" name="entrance">
+              <UInput v-model="state.entrance" size="lg" placeholder="1" />
+            </UFormField>
+
+            <UFormField
+              label="Срок сдачи"
+              name="completionDate"
+              description="Формат: YYYY-MM-DD (например: 2027-12-31)"
+            >
+              <UInput
+                v-model="state.completionDate"
+                size="lg"
+                placeholder="2027-12-31"
+                type="date"
+              />
+            </UFormField>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -339,6 +356,7 @@ const state = reactive<CreateApartmentDto>({
   rooms: 1,
   building: "",
   entrance: "",
+  completionDate: "",
   floor: 1,
   floorTotal: 1,
   finishing: FinishingType.NONE,
@@ -378,6 +396,9 @@ async function onSubmit() {
     const submitData = {
       ...state,
       finishing: selectedFinishing.value?.value || FinishingType.NONE,
+      completionDate: state.completionDate
+        ? `${state.completionDate}T00:00:00.000Z`
+        : undefined,
     };
     await apartmentsService.create(submitData);
 

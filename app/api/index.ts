@@ -28,7 +28,8 @@ export { projectsService } from "./projects.service";
 export { bannersService } from "./banners.service";
 export { newsService } from "./news.service";
 export { applicationsService } from "./applications.service";
-export { uploadsService } from "./uploads.service";
+export * from "./managers.service";
+export * from "./uploads.service";
 export * as authService from "./auth.service";
 
 // Config re-export

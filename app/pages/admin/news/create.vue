@@ -180,7 +180,7 @@ const state = reactive<{
   content: string;
   excerpt?: string;
   publishedAt?: string;
-  status?: string;
+  status?: { label: string; value: string };
   metaTitle?: string;
   metaDesc?: string;
   mediaIds?: string[];
@@ -190,7 +190,7 @@ const state = reactive<{
   content: "",
   excerpt: undefined,
   publishedAt: undefined,
-  status: "DRAFT",
+  status: { label: "Черновик", value: "DRAFT" },
   metaTitle: undefined,
   metaDesc: undefined,
   mediaIds: undefined,
@@ -286,7 +286,17 @@ async function onSubmit() {
 
   loading.value = true;
   try {
-    await newsService.create(state);
+    await newsService.create({
+      title: state.title,
+      slug: state.slug,
+      content: state.content,
+      excerpt: state.excerpt,
+      publishedAt: state.publishedAt,
+      status: state.status!.value!,
+      metaTitle: state.metaTitle,
+      metaDesc: state.metaDesc,
+      mediaIds: state.mediaIds,
+    });
 
     toast.add({
       title: "Успех",

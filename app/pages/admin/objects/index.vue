@@ -74,6 +74,27 @@
       </div>
 
       <UTable v-else :data="filteredObjects" :columns="columns" class="w-full">
+        <template #photo-cell="{ row }">
+          <div
+            class="w-12 h-12 rounded-lg overflow-hidden bg-neutral-100 flex items-center justify-center"
+          >
+            <img
+              v-if="
+                (row.original as any).media &&
+                (row.original as any).media.length > 0
+              "
+              :src="getFullUrl((row.original as any).media[0].url)"
+              class="w-full h-full object-cover"
+              alt=""
+            />
+            <UIcon
+              v-else
+              name="i-lucide-image"
+              class="w-5 h-5 text-neutral-300"
+            />
+          </div>
+        </template>
+
         <template #name-cell="{ row }">
           <div class="flex flex-col">
             <span class="font-medium text-neutral-900">{{
@@ -171,6 +192,7 @@
 <script setup lang="ts">
 import { objectsService } from "~/api/objects.service";
 import { projectsService } from "~/api/projects.service";
+import { uploadsService } from "~/api/uploads.service";
 import type { Object as IObject } from "~/api/types";
 
 definePageMeta({
@@ -179,6 +201,17 @@ definePageMeta({
 
 const toast = useToast();
 const search = ref("");
+
+function getFullUrl(url: string | null | undefined) {
+  if (!url) return "";
+  if (
+    typeof url === "string" &&
+    (url.startsWith("http://") || url.startsWith("https://"))
+  ) {
+    return url;
+  }
+  return uploadsService.getFileUrl(url);
+}
 
 const { data: projectsData } = await useAsyncData("projects-list", () =>
   projectsService.getAll(),
@@ -197,6 +230,7 @@ const projectOptions = computed(() => {
 const filterProject = ref(projectOptions.value[0]);
 
 const columns = [
+  { id: "photo", accessorKey: "photo", header: "Фото", width: "80px" },
   { id: "name", accessorKey: "name", header: "Название" },
   { id: "slug", accessorKey: "slug", header: "Slug" },
   { id: "projectName", accessorKey: "projectName", header: "Проект" },

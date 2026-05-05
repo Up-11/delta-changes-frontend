@@ -65,35 +65,61 @@
         </div>
       </template>
 
-      <UTable :rows="recentApplications" :columns="applicationColumns">
+      <div
+        v-if="
+          !isLoadingApplications && (!applications || applications.length === 0)
+        "
+        class="py-12 text-center"
+      >
+        <UIcon
+          name="i-lucide-inbox"
+          class="w-12 h-12 mx-auto text-neutral-300 mb-3"
+        />
+        <p class="text-sm text-neutral-500">Нет новых заявок</p>
+      </div>
+
+      <UTable
+        v-else
+        :data="applications || []"
+        :columns="applicationColumns"
+        :loading="isLoadingApplications"
+        :enable-sorting="false"
+      >
         <template #name-cell="{ row }">
           <div class="font-medium text-neutral-900">
-            {{ row.name }}
+            {{ row.getValue("name") || "—" }}
           </div>
           <div class="text-sm text-neutral-500">
-            {{ row.email }}
+            {{ row.original.email || "—" }}
           </div>
+        </template>
+
+        <template #type-cell="{ row }">
+          <span class="text-xs text-neutral-600">
+            {{ getApplicationTypeLabel(row.original.type) }}
+          </span>
         </template>
 
         <template #status-cell="{ row }">
           <UBadge
-            :color="row.status === 'new' ? 'primary' : 'neutral'"
+            :color="row.original.status === 'NEW' ? 'primary' : 'neutral'"
             variant="subtle"
             size="sm"
             class="text-[10px] uppercase tracking-wider"
           >
-            {{ row.status === "new" ? "Новая" : "Обработана" }}
+            {{ row.original.status === "NEW" ? "Новая" : "Обработана" }}
           </UBadge>
         </template>
 
-        <template #date-cell="{ row }">
+        <template #createdAt-cell="{ row }">
           <span class="text-sm text-neutral-500">
-            {{ row.date }}
+            {{ formatDate(row.original.createdAt) }}
           </span>
         </template>
 
-        <template #actions-cell>
+        <template #actions-cell="{ row }">
           <UButton
+            :to="`/admin/applications?id=${row.original.id}`"
             variant="ghost"
             color="neutral"
             size="xs"
@@ -191,9 +217,8 @@ const { data: statsData } = await useAsyncData("dashboard-stats", async () => {
   }
 });
 
-const { data: applications } = await useAsyncData(
-  "dashboard-applications",
-  async () => {
+const { data: applications, pending: isLoadingApplications } =
+  await useAsyncData("dashboard-applications", async () => {
     try {
       const data = await dashboardService.getRecentApplications();
       console.log("Applications loaded:", data);
@@ -202,8 +227,7 @@ const { data: applications } = await useAsyncData(
       console.error("Failed to load applications:", error);
       return [];
     }
-  },
-);
+  });
 
 const stats = computed(() => [
   {
@@ -240,27 +264,34 @@ const stats = computed(() => [
   },
 ]);
 
-const recentApplications = computed(() => {
-  if (!applications || !Array.isArray(applications)) return [];
-  return applications.slice(0, 5).map((app) => ({
-    id: app.id,
-    name: app.name || "Не указано",
-    email: app.email || "Не указано",
-    phone: app.phone || "Не указано",
-    type: app.type || "OTHER",
-    message: app.message || "",
-    status: app.status || "NEW",
-    date: new Date(app.createdAt).toLocaleString("ru-RU"),
-    ip: app.ipAddress || "—",
-  }));
-});
+function formatDate(dateString?: string): string {
+  if (!dateString) return "—";
+  try {
+    return new Date(dateString).toLocaleString("ru-RU");
+  } catch {
+    return dateString;
+  }
+}
+
+function getApplicationTypeLabel(type?: string): string {
+  const labels: Record<string, string> = {
+    BUY: "Покупка",
+    SELL: "Продажа",
+    RENT: "Аренда",
+    CONSULT: "Консультация",
+    COMMERCIAL: "Коммерция",
+    MORTGAGE: "Ипотека",
+    OTHER: "Другое",
+  };
+  return labels[type || "OTHER"] || "Другое";
+}
 
 const applicationColumns = [
-  { id: "name", key: "name", label: "Клиент" },
-  { id: "type", key: "type", label: "Тип" },
-  { id: "status", key: "status", label: "Статус" },
-  { id: "date", key: "date", label: "Дата" },
-  { id: "actions", key: "actions", label: "" },
+  { accessorKey: "name", header: "Клиент" },
+  { accessorKey: "type", header: "Тип" },
+  { accessorKey: "status", header: "Статус" },
+  { accessorKey: "createdAt", header: "Дата" },
+  { accessorKey: "actions", header: "" },
 ];
 
 const quickActions = [

@@ -153,19 +153,6 @@
           </div>
 
           <UFormField
-            label="Краткое описание"
-            name="shortDescription"
-            description="Текст для карточек в списках"
-          >
-            <UInput
-              v-model="state.shortDescription"
-              size="lg"
-              class="w-full"
-              placeholder="Кратко о главном..."
-            />
-          </UFormField>
-
-          <UFormField
             label="Полное описание"
             name="description"
             description="Подробное описание преимуществ и характеристик"
@@ -175,7 +162,36 @@
               size="lg"
               class="w-full"
               placeholder="Введите подробное описание..."
-              rows="6"
+              :rows="6"
+            />
+          </UFormField>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <UFormField
+              label="Заголовок концепции"
+              name="conceptTitle"
+              description="Заголовок для блока философии/концепции"
+            >
+              <UInput
+                v-model="state.conceptTitle"
+                size="lg"
+                class="w-full"
+                placeholder="Философия жизни в балансе"
+              />
+            </UFormField>
+          </div>
+
+          <UFormField
+            label="Текст концепции"
+            name="conceptText"
+            description="Текст описывающий идею и философию проекта (поддерживает HTML)"
+          >
+            <UTextarea
+              v-model="state.conceptText"
+              size="lg"
+              class="w-full"
+              placeholder="Опишите концепцию проекта..."
+              :rows="6"
             />
           </UFormField>
         </div>
@@ -254,6 +270,64 @@
           </div>
         </div>
 
+        <!-- Характеристики -->
+        <div class="space-y-6 pt-4">
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2"
+          >
+            Характеристики
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <UFormField
+              label="Срок сдачи"
+              name="completionDate"
+              description="Дата завершения строительства (YYYY-MM-DD или текст)"
+            >
+              <UInput
+                v-model="state.completionDate"
+                size="lg"
+                class="w-full"
+                placeholder="2026-12-31 или IV квартал 2028"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Этажность"
+              name="floors"
+              description="Количество этажей"
+            >
+              <UInput
+                v-model.number="state.floors"
+                size="lg"
+                class="w-full"
+                type="number"
+                placeholder="16"
+              />
+            </UFormField>
+
+            <UFormField
+              label="Отделка"
+              name="finishing"
+              description="Тип отделки"
+            >
+              <USelect
+                v-model="state.finishing"
+                :items="[
+                  { label: 'Не выбрано', value: undefined },
+                  { label: 'Без отделки', value: 'NONE' },
+                  { label: 'Предчистовая', value: 'ROUGH' },
+                  { label: 'Чистовая', value: 'CLEAN' },
+                  { label: 'Белый куб', value: 'WHITE_CUBE' },
+                  { label: 'С ремонтом', value: 'TURNKEY' },
+                  { label: 'Дизайнерская', value: 'DESIGNER' },
+                ]"
+                size="lg"
+                class="w-full"
+              />
+            </UFormField>
+          </div>
+        </div>
+
         <!-- Настройки -->
         <div class="space-y-6 pt-4">
           <h3
@@ -285,6 +359,101 @@
           </div>
         </div>
 
+        <!-- Фото -->
+        <div class="space-y-6 pt-4">
+          <h3
+            class="text-xs font-bold uppercase tracking-wider text-neutral-500 border-b border-neutral-100 pb-2"
+          >
+            Медиа материалы
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <UFormField
+              label="Баннер (Hero)"
+              name="bannerId"
+              description="Главное изображение на первом экране"
+            >
+              <AdminMediaUploader v-model="state.bannerId" />
+            </UFormField>
+
+            <UFormField
+              label="Главное фото"
+              name="mainPhotoId"
+              description="Изображение для блока концепции"
+            >
+              <AdminMediaUploader v-model="state.mediaIds" multiple />
+            </UFormField>
+          </div>
+        </div>
+
+        <!-- Особенности проекта -->
+        <div class="space-y-6 pt-8">
+          <div
+            class="flex items-center justify-between border-b border-neutral-100 pb-2"
+          >
+            <h3
+              class="text-xs font-bold uppercase tracking-wider text-neutral-500"
+            >
+              Особенности проекта
+            </h3>
+            <UButton
+              color="primary"
+              variant="ghost"
+              size="xs"
+              icon="i-lucide-plus"
+              label="Добавить особенность"
+              @click="addFeature"
+            />
+          </div>
+
+          <div
+            v-if="state.features.length === 0"
+            class="text-center py-8 border-2 border-dashed border-neutral-100 rounded-xl"
+          >
+            <p class="text-xs text-neutral-400 uppercase tracking-widest">
+              Особенности не добавлены
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div
+              v-for="(feature, index) in state.features"
+              :key="index"
+              class="p-6 border border-neutral-200 rounded-xl space-y-4 relative group"
+            >
+              <UButton
+                color="red"
+                variant="ghost"
+                size="xs"
+                icon="i-lucide-trash-2"
+                class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                @click="removeFeature(index)"
+              />
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                  <UFormField label="Заголовок">
+                    <UInput
+                      v-model="feature.title"
+                      placeholder="Твое место силы"
+                    />
+                  </UFormField>
+                  <UFormField label="Описание">
+                    <UTextarea
+                      v-model="feature.description"
+                      placeholder="Краткое описание особенности..."
+                      :rows="3"
+                    />
+                  </UFormField>
+                </div>
+                <UFormField label="Изображение">
+                  <AdminMediaUploader v-model="feature.mediaIds" multiple />
+                </UFormField>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="flex justify-end gap-3 pt-4 border-t border-neutral-100">
           <UButton
             color="neutral"
@@ -305,7 +474,7 @@
 <script setup lang="ts">
 import { objectsService } from "~/api/objects.service";
 import { projectsService } from "~/api/projects.service";
-import type { UpdateObjectDto } from "~/api/types";
+import type { UpdateObjectDto, FinishingType } from "~/api/types";
 
 definePageMeta({
   layout: "admin",
@@ -326,47 +495,144 @@ const { data: projects } = await useAsyncData("projects-list", () =>
   projectsService.getAll(),
 );
 
+interface MediaItem {
+  id: string;
+  url: string;
+  type: string;
+}
+
 const state = reactive<{
   name: string;
   slug: string;
   description: string;
-  shortDescription: string;
+  conceptTitle: string;
+  conceptText: string;
   address: string;
+  completionDate?: string;
+  floors?: number;
+  finishing?: FinishingType;
   latitude: number | undefined;
   longitude: number | undefined;
   isActive: boolean;
   sortOrder: number;
   projectId: string;
+  bannerId: string | MediaItem | undefined;
+  mediaIds: (string | MediaItem)[]; // main photo - can be IDs or full objects
+  features: {
+    title: string;
+    description: string;
+    mediaIds: (string | MediaItem)[];
+  }[];
 }>({
   name: "",
   slug: "",
   description: "",
-  shortDescription: "",
+  conceptTitle: "",
+  conceptText: "",
   address: "",
+  completionDate: "",
+  floors: undefined,
+  finishing: undefined,
   latitude: undefined,
   longitude: undefined,
   isActive: true,
   sortOrder: 0,
   projectId: "",
+  bannerId: undefined,
+  mediaIds: [],
+  features: [],
 });
+
+const addFeature = () => {
+  state.features.push({ title: "", description: "", mediaIds: [] });
+};
+
+const removeFeature = (index: number) => {
+  state.features.splice(index, 1);
+};
 
 onMounted(async () => {
   try {
     const data = await objectsService.getById(id);
-    Object.assign(state, {
-      name: data.name,
-      slug: data.slug,
-      description: data.description || "",
-      shortDescription: data.shortDescription || "",
-      address: data.address || "",
-      latitude: data.latitude || undefined,
-      longitude: data.longitude || undefined,
-      isActive: data.isActive,
-      sortOrder: data.sortOrder,
-      projectId: data.projectId || "",
+    console.log("Full data received from API:", JSON.stringify(data, null, 2));
+
+    // Populate all reactive state fields individually to ensure Vue tracking
+    state.name = data.name || "";
+    state.slug = data.slug || "";
+
+    // Support potential variations in naming (backend vs frontend types)
+    state.description = (data as any).description || "";
+    state.conceptTitle = (data as any).conceptTitle || "";
+    state.conceptText = (data as any).conceptText || "";
+
+    state.address = data.address || "";
+    state.completionDate = data.completionDate || "";
+    state.floors = data.floors || undefined;
+    state.finishing = data.finishing || undefined;
+    state.latitude = data.latitude || undefined;
+    state.longitude = data.longitude || undefined;
+    state.isActive = data.isActive;
+    state.sortOrder = data.sortOrder || 0;
+    state.projectId = data.projectId || "";
+
+    // DEBUG: Log raw data from server
+    console.log("[ObjectEdit] Raw data from server:", {
+      banner: data.banner,
+      media: data.media,
+      features: data.features,
     });
 
-    // Устанавливаем имя проекта для отображения
+    // Media mapping - keep full media objects for proper preview display
+    if (data.banner && Array.isArray(data.banner) && data.banner.length > 0) {
+      // Store full media object with url for preview, keep id for saving
+      state.bannerId = data.banner[0];
+      console.log("[ObjectEdit] bannerId set to:", state.bannerId);
+    } else if ((data as any).bannerId) {
+      state.bannerId = (data as any).bannerId;
+      console.log("[ObjectEdit] bannerId set to ID only:", state.bannerId);
+    } else {
+      state.bannerId = undefined;
+      console.log("[ObjectEdit] bannerId set to undefined");
+    }
+
+    // Main media files (mediaIds mapping) - store full objects for preview
+    if (data.media && Array.isArray(data.media) && data.media.length > 0) {
+      // Store full media objects so MediaUploader can display previews using url
+      state.mediaIds = data.media;
+      console.log("[ObjectEdit] mediaIds set to:", state.mediaIds);
+    } else {
+      state.mediaIds = [];
+      console.log("[ObjectEdit] mediaIds set to empty array");
+    }
+
+    // Features mapping with robust array checks - store full media objects
+    if (data.features && Array.isArray(data.features)) {
+      state.features = data.features.map((f: any, index: number) => {
+        const feature = {
+          title: f.title || "",
+          description: f.description || "",
+          // Store full media objects for proper preview display
+          mediaIds:
+            f.media && Array.isArray(f.media) && f.media.length > 0
+              ? f.media
+              : [],
+        };
+        console.log(
+          `[ObjectEdit] Feature ${index} mediaIds:`,
+          feature.mediaIds,
+        );
+        return feature;
+      });
+    } else {
+      state.features = [];
+    }
+
+    console.log(
+      "Final state after population:",
+      JSON.parse(JSON.stringify(state)),
+    );
+
+    // Project selection visibility
     if (data.projectId && projects.value) {
       const proj = projects.value.find((p) => p.id === data.projectId);
       if (proj) selectedProjectName.value = proj.name;
@@ -507,6 +773,21 @@ function resetSlug() {
   generateSlug();
 }
 
+// Helper to extract ID from media object or string
+function extractMediaId(
+  value: string | MediaItem | undefined,
+): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === "string") return value;
+  return value.id;
+}
+
+// Helper to extract IDs from media array
+function extractMediaIds(values: (string | MediaItem)[] | undefined): string[] {
+  if (!values || !Array.isArray(values)) return [];
+  return values.map((v) => (typeof v === "string" ? v : v.id)).filter(Boolean);
+}
+
 async function onSubmit() {
   const errors = validate(state);
   if (errors.length > 0) {
@@ -514,9 +795,48 @@ async function onSubmit() {
     return;
   }
 
+  // DEBUG: Log state before building DTO
+  console.log("[ObjectEdit] state.mediaIds before submit:", state.mediaIds);
+  console.log("[ObjectEdit] state.bannerId before submit:", state.bannerId);
+  console.log(
+    "[ObjectEdit] extractMediaIds result:",
+    extractMediaIds(state.mediaIds),
+  );
+
   loading.value = true;
   try {
-    await objectsService.update(id, state as UpdateObjectDto);
+    // Build DTO with extracted IDs from media objects
+    const dto: UpdateObjectDto = {
+      name: state.name,
+      slug: state.slug,
+      description: state.description,
+      conceptTitle: state.conceptTitle,
+      conceptText: state.conceptText,
+      address: state.address,
+      completionDate: state.completionDate,
+      floors: state.floors,
+      finishing: state.finishing,
+      latitude: state.latitude,
+      longitude: state.longitude,
+      isActive: state.isActive,
+      sortOrder: state.sortOrder,
+      projectId: state.projectId,
+      bannerId: extractMediaId(state.bannerId),
+      mediaIds: extractMediaIds(state.mediaIds),
+      features: state.features.map((f) => ({
+        title: f.title,
+        description: f.description,
+        mediaIds: extractMediaIds(f.mediaIds as (string | MediaItem)[]),
+      })),
+    };
+
+    // DEBUG: Log DTO being sent to server
+    console.log(
+      "[ObjectEdit] DTO being sent to server:",
+      JSON.parse(JSON.stringify(dto)),
+    );
+
+    await objectsService.update(id, dto);
 
     toast.add({
       title: "Успех",

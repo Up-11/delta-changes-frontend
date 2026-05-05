@@ -15,7 +15,7 @@ export function getApiBaseUrl(): string {
 }
 
 /** Default fallback base URL */
-export const DEFAULT_API_BASE_URL = "http://localhost:4200";
+export const DEFAULT_API_BASE_URL = "https://jvzp9vk6-4200.euw.devtunnels.ms";
 
 /** Helper to build full URL */
 export function buildApiUrl(endpoint: string): string {
@@ -347,6 +347,41 @@ export const API_ENDPOINTS = {
     },
   },
 
+  /** Managers module - Sales department managers */
+  managers: {
+    base: "/managers",
+    list: {
+      method: "GET" as const,
+      path: "/managers",
+      access: "public" as const,
+      description: "Get all managers",
+    },
+    getById: {
+      method: "GET" as const,
+      path: (id: string) => `/managers/${id}`,
+      access: "public" as const,
+      description: "Get manager by id",
+    },
+    create: {
+      method: "POST" as const,
+      path: "/managers",
+      access: "admin" as const,
+      description: "Create new manager",
+    },
+    update: {
+      method: "PATCH" as const,
+      path: (id: string) => `/managers/${id}`,
+      access: "admin" as const,
+      description: "Update manager by id",
+    },
+    delete: {
+      method: "DELETE" as const,
+      path: (id: string) => `/managers/${id}`,
+      access: "admin" as const,
+      description: "Delete manager by id",
+    },
+  },
+
   /** Static files - Served directly from uploads folder */
   static: {
     uploads: {
@@ -374,6 +409,8 @@ export const PUBLIC_ENDPOINTS = [
   "/news/:id",
   "/news/slug/:slug",
   "/applications",
+  "/managers",
+  "/managers/:id",
   "/uploads/:path*",
 ];
 
@@ -391,6 +428,8 @@ export const ADMIN_ENDPOINTS = [
   "/news/:id",
   "/applications",
   "/applications/:id",
+  "/managers",
+  "/managers/:id",
   "/uploads",
   "/uploads/image",
   "/uploads/video",

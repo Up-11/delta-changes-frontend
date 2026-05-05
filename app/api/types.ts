@@ -14,7 +14,9 @@ export enum FinishingType {
   NONE = "NONE",
   ROUGH = "ROUGH",
   CLEAN = "CLEAN",
+  WHITE_CUBE = "WHITE_CUBE",
   TURNKEY = "TURNKEY",
+  DESIGNER = "DESIGNER",
 }
 
 export enum ApplicationStatus {
@@ -115,36 +117,82 @@ export interface Object {
   name: string;
   slug: string;
   description?: string | null;
-  shortDescription?: string | null;
+  conceptTitle?: string | null;
+  conceptText?: string | null;
   address?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  completionDate?: string | null;
+  floors?: number | null;
+  finishing?: FinishingType | null;
   isActive: boolean;
   sortOrder: number;
-  projectId?: string | null;
+  projectId: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ObjectWithRelations extends Object {
   project?: Project | null;
+  banner?: Media[];
+  masterPlan?: Media | null;
   media?: Media[];
   apartments?: Apartment[];
-  features?: FeatureItem[];
-  galleries?: Gallery[];
+  features?: FeatureItemWithRelations[];
+  galleries?: GalleryWithRelations[];
+  constructionProgress?: ConstructionProgress[];
+  infrastructure?: InfrastructurePoint[];
+}
+
+export interface FeatureItemWithRelations extends FeatureItem {
+  media?: Media[];
+}
+
+export interface ConstructionProgress {
+  id: string;
+  month: number;
+  year: number;
+  title?: string | null;
+  description?: string | null;
+  media?: Media[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InfrastructurePoint {
+  id: string;
+  title: string;
+  category: InfrastructureCategory;
+  latitude: number;
+  longitude: number;
+  address?: string | null;
+}
+
+export enum InfrastructureCategory {
+  EDUCATION = "EDUCATION",
+  SHOPPING = "SHOPPING",
+  HEALTH = "HEALTH",
+  SPORT = "SPORT",
+  LEISURE = "LEISURE",
+  TRANSPORT = "TRANSPORT",
 }
 
 export interface CreateObjectDto {
   name: string;
   slug: string;
   description?: string;
-  shortDescription?: string;
+  conceptTitle?: string;
+  conceptText?: string;
   address?: string;
   latitude?: number;
   longitude?: number;
   isActive?: boolean;
   sortOrder?: number;
   projectId?: string;
+  bannerId?: string;
+  mediaIds?: string[];
+  features?: { title: string; description?: string; mediaIds?: string[] }[];
+  galleries?: { title?: string; mediaIds?: string[] }[];
 }
 
 export type UpdateObjectDto = Partial<CreateObjectDto>;
@@ -257,8 +305,10 @@ export interface Application {
   phone: string;
   email?: string | null;
   message?: string | null;
-  type: ApplicationType;
   status: ApplicationStatus;
+  apartmentId?: string | null;
+  apartment?: Apartment | null;
+  source?: string | null;
   ipAddress?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -269,7 +319,8 @@ export interface CreateApplicationDto {
   phone: string;
   email?: string;
   message?: string;
-  type: ApplicationType;
+  apartmentId?: string;
+  source?: string;
 }
 
 export interface UpdateApplicationDto {
@@ -309,6 +360,111 @@ export interface CreateNewsDto {
 }
 
 export type UpdateNewsDto = Partial<CreateNewsDto>;
+
+// ==================== MANAGER (ОТДЕЛ ПРОДАЖ) ====================
+
+export interface Manager {
+  id: string;
+  name: string;
+  position: string;
+  phone?: string | null;
+  isHead: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ManagerWithRelations extends Manager {
+  media?: Media[];
+}
+
+export interface CreateManagerDto {
+  name: string;
+  position: string;
+  phone?: string;
+  isHead?: boolean;
+  isActive?: boolean;
+  sortOrder?: number;
+  mediaIds?: string[];
+}
+
+export type UpdateManagerDto = Partial<CreateManagerDto>;
+
+// ==================== ABOUT PAGE ====================
+
+export interface AboutPage {
+  id: string;
+  title: string;
+  subtitle: string;
+  announcement: string;
+  stat1Value: string;
+  stat1Label: string;
+  stat2Value: string;
+  stat2Label: string;
+  stat3Value: string;
+  stat3Label: string;
+  stat4Value: string;
+  stat4Label: string;
+  pdfUrl?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AboutPageWithRelations extends AboutPage {
+  media?: Media[];
+}
+
+export interface TimelineEvent {
+  id: string;
+  year: string;
+  title: string;
+  description: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Shareholder {
+  id: string;
+  name: string;
+  position: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShareholderWithRelations extends Shareholder {
+  media?: Media[];
+}
+
+export interface UpdateAboutPageDto {
+  title?: string;
+  subtitle?: string;
+  announcement?: string;
+  stat1Value?: string;
+  stat1Label?: string;
+  stat2Value?: string;
+  stat2Label?: string;
+  stat3Value?: string;
+  stat3Label?: string;
+  stat4Value?: string;
+  stat4Label?: string;
+  mediaIds?: string[];
+}
+
+export interface CreateTimelineEventDto {
+  year: string;
+  title: string;
+  description: string;
+  sortOrder?: number;
+}
+
+export interface CreateShareholderDto {
+  name: string;
+  position: string;
+  sortOrder?: number;
+}
 
 // ==================== UPLOAD / FILE ====================
 

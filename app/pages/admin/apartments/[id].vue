@@ -245,6 +245,23 @@
             <UFormField label="Корпус/Секция" name="building">
               <UInput v-model="state.building" size="lg" placeholder="А" />
             </UFormField>
+
+            <UFormField label="Подъезд" name="entrance">
+              <UInput v-model="state.entrance" size="lg" placeholder="1" />
+            </UFormField>
+
+            <UFormField
+              label="Срок сдачи"
+              name="completionDate"
+              description="Формат: YYYY-MM-DD (например: 2027-12-31)"
+            >
+              <UInput
+                v-model="state.completionDate"
+                size="lg"
+                placeholder="2027-12-31"
+                type="date"
+              />
+            </UFormField>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -379,6 +396,7 @@ const state = reactive<{
   rooms: 1,
   building: "",
   entrance: "",
+  completionDate: "",
   floor: 1,
   floorTotal: 1,
   finishing: FinishingType.NONE,
@@ -412,6 +430,7 @@ onMounted(async () => {
       rooms: data.rooms ?? 1,
       building: data.building ?? "",
       entrance: data.entrance ?? "",
+      completionDate: data.completionDate ?? "",
       floor: data.floor,
       floorTotal: data.floorTotal,
       finishing: data.finishing ?? FinishingType.NONE,
@@ -477,11 +496,31 @@ async function onSubmit() {
 
   loading.value = true;
   try {
-    const submitData = {
-      ...state,
+    // Ensure all number fields are actually numbers
+    const submitData: UpdateApartmentDto = {
+      number: state.number,
+      price: Number(state.price),
+      projectId: state.projectId,
+      objectId: state.objectId,
+      area: state.area ? Number(state.area) : undefined,
+      rooms: state.rooms ? Number(state.rooms) : undefined,
+      building: state.building || undefined,
+      entrance: state.entrance || undefined,
+      completionDate: state.completionDate
+        ? `${state.completionDate}T00:00:00.000Z`
+        : undefined,
+      floor: Number(state.floor),
+      floorTotal: Number(state.floorTotal),
       finishing: selectedFinishing.value?.value || FinishingType.NONE,
+      isAvailable: state.isAvailable,
+      sortOrder: state.sortOrder,
+      layoutPhotoId: state.layoutPhotoId || undefined,
+      floorPlanPhotoId: state.floorPlanPhotoId || undefined,
+      masterPlanPhotoId: state.masterPlanPhotoId || undefined,
     };
-    await apartmentsService.update(id, submitData as UpdateApartmentDto);
+
+    console.log("Submitting apartment update:", submitData);
+    await apartmentsService.update(id, submitData);
 
     toast.add({
       title: "Успех",
