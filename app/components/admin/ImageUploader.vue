@@ -6,10 +6,12 @@
         error
           ? 'border-primary-500/50 bg-primary-50/10'
           : 'border-neutral-200 hover:border-primary-500/50 hover:bg-primary-50/5',
-        isDragging
+        isDragging && !loading
           ? 'border-primary-500 bg-primary-50/20 ring-4 ring-primary-500/10'
           : '',
+        loading ? 'pointer-events-none cursor-wait' : 'cursor-pointer',
       ]"
+      :aria-busy="loading"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
       @drop.prevent="onDrop"
@@ -23,6 +25,7 @@
           alt="Preview"
         />
         <div
+          v-if="!loading"
           class="absolute inset-0 bg-neutral-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
         >
           <UButton
@@ -30,6 +33,7 @@
             variant="solid"
             icon="i-lucide-refresh-cw"
             size="xs"
+            :disabled="loading"
             @click.stop="triggerFileInput"
           >
             Заменить
@@ -39,6 +43,7 @@
             variant="solid"
             icon="i-lucide-trash-2"
             size="xs"
+            :disabled="loading"
             @click.stop="removeImage"
           >
             Удалить
@@ -48,17 +53,7 @@
 
       <!-- Placeholder -->
       <template v-else>
-        <div v-if="loading" class="flex flex-col items-center gap-2">
-          <UIcon
-            name="i-lucide-loader-2"
-            class="w-8 h-8 animate-spin text-primary-500"
-          />
-          <span
-            class="text-[10px] uppercase font-bold tracking-widest text-neutral-400"
-            >Загрузка...</span
-          >
-        </div>
-        <div v-else class="flex flex-col items-center gap-2 text-center p-4">
+        <div class="flex flex-col items-center gap-2 text-center p-4">
           <div
             class="bg-white p-3 rounded-full shadow-sm border border-neutral-100 group-hover:scale-110 transition-transform duration-200"
           >
@@ -85,8 +80,25 @@
         type="file"
         class="hidden"
         accept="image/*"
+        :disabled="loading"
         @change="onFileChange"
       />
+
+      <div
+        v-if="loading"
+        class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-neutral-900/55 backdrop-blur-[2px]"
+        aria-live="polite"
+      >
+        <UIcon
+          name="i-lucide-loader-2"
+          class="w-8 h-8 animate-spin text-white"
+        />
+        <span
+          class="text-[10px] uppercase font-bold tracking-widest text-white/90"
+        >
+          Загрузка...
+        </span>
+      </div>
     </div>
 
     <p
@@ -133,10 +145,13 @@ function getFullUrl(url: string | null | undefined) {
 }
 
 function triggerFileInput() {
+  if (loading.value) return;
   fileInput.value?.click();
 }
 
 async function handleFileUpload(file: File) {
+  if (loading.value) return;
+
   if (!file.type.startsWith("image/")) {
     error.value = "Только изображения";
     return;
@@ -171,6 +186,7 @@ async function handleFileUpload(file: File) {
 }
 
 function onFileChange(e: Event) {
+  if (loading.value) return;
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
@@ -179,14 +195,17 @@ function onFileChange(e: Event) {
 }
 
 function onDragOver() {
+  if (loading.value) return;
   isDragging.value = true;
 }
 
 function onDragLeave() {
+  if (loading.value) return;
   isDragging.value = false;
 }
 
 function onDrop(e: DragEvent) {
+  if (loading.value) return;
   isDragging.value = false;
   const file = e.dataTransfer?.files?.[0];
   if (file) {
@@ -195,6 +214,7 @@ function onDrop(e: DragEvent) {
 }
 
 function removeImage() {
+  if (loading.value) return;
   previewUrl.value = "";
   emit("update:modelValue", null);
   if (fileInput.value) fileInput.value.value = "";

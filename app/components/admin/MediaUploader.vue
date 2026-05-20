@@ -6,35 +6,38 @@
         error
           ? 'border-primary-500/50 bg-primary-50/10'
           : 'border-neutral-200 hover:border-primary-500/50 hover:bg-primary-50/5',
-        isDragging
+        isDragging && !loading
           ? 'border-primary-500 bg-primary-50/20 ring-4 ring-primary-500/10'
           : '',
+        loading ? 'pointer-events-none cursor-wait' : 'cursor-pointer',
       ]"
+      :aria-busy="loading"
       @dragover.prevent="onDragOver"
       @dragleave.prevent="onDragLeave"
       @drop.prevent="onDrop"
       @click="triggerFileInput"
     >
-      <!-- Preview -->
       <template v-if="hasMediaContent">
-        <img
-          v-if="
-            fileType === 'image' ||
-            (fileType === null && checkIsImageByUrl(getResolvedUrl()))
-          "
-          :src="previewUrl || getResolvedUrl()"
-          class="absolute inset-0 w-full h-full object-cover"
-          alt="Preview"
-        />
         <video
-          v-else-if="fileType === 'video' || hasMediaContent"
+          v-if="
+            fileType === 'video' ||
+            (fileType === null && checkIsVideoByUrl(getResolvedUrl()))
+          "
           :src="previewUrl || getResolvedUrl()"
           class="absolute inset-0 w-full h-full object-cover"
           muted
           autoplay
           loop
         />
+        <img
+          v-else
+          :src="previewUrl || getResolvedUrl()"
+          class="absolute inset-0 w-full h-full object-cover"
+          alt="Preview"
+        />
+
         <div
+          v-if="!loading"
           class="absolute inset-0 bg-neutral-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
         >
           <UButton
@@ -42,6 +45,7 @@
             variant="solid"
             icon="i-lucide-refresh-cw"
             size="xs"
+            :disabled="loading"
             @click.stop="triggerFileInput"
           >
             Заменить
@@ -51,6 +55,7 @@
             variant="solid"
             icon="i-lucide-trash-2"
             size="xs"
+            :disabled="loading"
             @click.stop="removeMedia"
           >
             Удалить
@@ -58,19 +63,8 @@
         </div>
       </template>
 
-      <!-- Placeholder -->
       <template v-else>
-        <div v-if="loading" class="flex flex-col items-center gap-2">
-          <UIcon
-            name="i-lucide-loader-2"
-            class="w-8 h-8 animate-spin text-primary-500"
-          />
-          <span
-            class="text-[10px] uppercase font-bold tracking-widest text-neutral-400"
-            >Загрузка...</span
-          >
-        </div>
-        <div v-else class="flex flex-col items-center gap-2 text-center p-4">
+        <div class="flex flex-col items-center gap-2 text-center p-4">
           <div
             class="bg-white p-3 rounded-full shadow-sm border border-neutral-100 group-hover:scale-110 transition-transform duration-200"
           >
@@ -97,8 +91,25 @@
         type="file"
         class="hidden"
         accept="image/*,video/*"
+        :disabled="loading"
         @change="onFileChange"
       />
+
+      <div
+        v-if="loading"
+        class="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-neutral-900/55 backdrop-blur-[2px]"
+        aria-live="polite"
+      >
+        <UIcon
+          name="i-lucide-loader-2"
+          class="w-8 h-8 animate-spin text-white"
+        />
+        <span
+          class="text-[10px] uppercase font-bold tracking-widest text-white/90"
+        >
+          Загрузка...
+        </span>
+      </div>
     </div>
 
     <p
@@ -111,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { uploadsService } from "~/api/uploads.service";
 
 const props = defineProps<{
@@ -120,8 +131,6 @@ const props = defineProps<{
   icon?: string;
   multiple?: boolean;
 }>();
-
-console.log(props.modelValue);
 
 const emit = defineEmits<{
   (e: "update:modelValue", value: string | string[] | null): void;
@@ -135,49 +144,22 @@ const isDragging = ref(false);
 const isImage = ref(false);
 const fileType = ref<"image" | "video" | null>(null);
 
-// Debug logging
-watch(
-  () => props.modelValue,
-  (val) => {
-    console.log("[MediaUploader] modelValue changed:", val);
-  },
-  { immediate: true, deep: true },
-);
-
 // Computed property to check if there's actual media to display
 const hasMediaContent = computed(() => {
-  console.log("[MediaUploader] hasMediaContent check:", props.modelValue);
   if (previewUrl.value) return true;
   if (!props.modelValue) return false;
-  // Handle arrays - check if array has content
+
   if (Array.isArray(props.modelValue)) {
-    const result =
-      props.modelValue.length > 0 &&
-      props.modelValue[0] !== null &&
-      props.modelValue[0] !== undefined &&
-      props.modelValue[0] !== "";
-    console.log(
-      "[MediaUploader] Array check result:",
-      result,
-      "first item:",
-      props.modelValue[0],
-    );
-    return result;
+    return props.modelValue.length > 0 && !!props.modelValue[0];
   }
-  // Handle objects - check if it has a url or id
+
   if (typeof props.modelValue === "object") {
-    const result =
+    return (
       props.modelValue !== null &&
-      (props.modelValue.url || props.modelValue.id);
-    console.log(
-      "[MediaUploader] Object check result:",
-      result,
-      "url:",
-      props.modelValue?.url,
+      !!(props.modelValue.url || props.modelValue.id)
     );
-    return result;
   }
-  // Handle strings - check if not empty
+
   return typeof props.modelValue === "string" && props.modelValue.length > 0;
 });
 
@@ -189,13 +171,11 @@ function getResolvedUrl() {
 
   if (!value) return "";
 
-  // If it's an object with url property (from API include)
   if (typeof value === "object" && value !== null) {
     const obj = value as any;
     if (obj.url) return getFullUrl(obj.url);
   }
 
-  // If it's a string (likely ID or URL)
   if (typeof value === "string") {
     return getFullUrl(value);
   }
@@ -205,10 +185,8 @@ function getResolvedUrl() {
 
 function getFullUrl(url: string | null | undefined) {
   if (!url) return "";
-
   const urlStr = String(url);
 
-  // If it's already a full URL or data URL
   if (
     urlStr.startsWith("http://") ||
     urlStr.startsWith("https://") ||
@@ -217,27 +195,22 @@ function getFullUrl(url: string | null | undefined) {
     return urlStr;
   }
 
-  // If it's a UUID (36 chars, with hyphens) - we can't resolve it sync,
-  // but let's try to see if it's a filename first
-  if (urlStr.includes(".") && !urlStr.includes("/")) {
-    return uploadsService.getFileUrl(urlStr);
-  }
-
-  // If it starts with /uploads or similar (relative path from API)
   if (urlStr.startsWith("/")) {
     return uploadsService.getFileUrl(urlStr);
   }
 
-  // Otherwise, assume it's a filename that needs prepending
-  // or return as is if we're not sure
-  return uploadsService.getFileUrl(urlStr);
+  // Fallback
+  return uploadsService.getFileUrl(`/uploads/${urlStr}`);
 }
 
 function triggerFileInput() {
+  if (loading.value) return;
   fileInput.value?.click();
 }
 
 async function handleFileUpload(file: File) {
+  if (loading.value) return;
+
   if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
     error.value = "Только изображения или видео";
     return;
@@ -253,7 +226,6 @@ async function handleFileUpload(file: File) {
   isImage.value = checkIsImage(file);
   fileType.value = isImage.value ? "image" : "video";
 
-  // Создаем локальное превью
   const reader = new FileReader();
   reader.onload = (e) => {
     previewUrl.value = e.target?.result as string;
@@ -268,79 +240,82 @@ async function handleFileUpload(file: File) {
       res = await uploadsService.uploadVideo(file);
     }
 
+    // БЕЗОПАСНОЕ ИЗВЛЕЧЕНИЕ ID
+    // Проверяем разные варианты ответов от API (Axios / Fetch / нестандартные обертки)
+    const mediaId =
+      res?.id || res?.data?.id || (typeof res === "string" ? res : null);
+
+    if (!mediaId) {
+      throw new Error("Не удалось получить ID из ответа сервера");
+    }
+
     if (props.multiple) {
-      // Append to array - emit only media ID
       const current = Array.isArray(props.modelValue) ? props.modelValue : [];
-      emit("update:modelValue", [...current, res.id]);
+      emit("update:modelValue", [...current, mediaId]);
     } else {
-      // Single mode - emit only media ID
-      emit("update:modelValue", res.id);
+      emit("update:modelValue", mediaId);
     }
   } catch (err: any) {
     console.error("Upload error:", err);
     error.value = "Ошибка загрузки";
     previewUrl.value = "";
+    fileType.value = null;
   } finally {
     loading.value = false;
   }
 }
 
 function onFileChange(e: Event) {
+  if (loading.value) return;
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
-  if (file) {
-    handleFileUpload(file);
-  }
+  if (file) handleFileUpload(file);
+  // Очищаем input, чтобы можно было загрузить тот же файл еще раз
+  if (target) target.value = "";
 }
 
 function onDragOver() {
+  if (loading.value) return;
   isDragging.value = true;
 }
 
 function onDragLeave() {
+  if (loading.value) return;
   isDragging.value = false;
 }
 
 function onDrop(e: DragEvent) {
+  if (loading.value) return;
   isDragging.value = false;
   const file = e.dataTransfer?.files?.[0];
-  if (file) {
-    handleFileUpload(file);
-  }
+  if (file) handleFileUpload(file);
 }
 
 function removeMedia() {
+  if (loading.value) return;
   previewUrl.value = "";
   fileType.value = null;
   isImage.value = false;
-  // For multiple mode, emit empty array; for single mode, emit null
   if (props.multiple) {
     emit("update:modelValue", []);
   } else {
     emit("update:modelValue", null);
   }
-  if (fileInput.value) fileInput.value.value = "";
 }
 
 function checkIsImage(file: File): boolean {
   return file.type.startsWith("image/");
 }
 
-function checkIsImageByUrl(url: string): boolean {
+function checkIsVideoByUrl(url: string): boolean {
   if (!url) return false;
   const lowerUrl = url.toLowerCase();
-  const imageExtensions = [
-    ".jpg",
-    ".jpeg",
-    ".png",
-    ".gif",
-    ".webp",
-    ".avif",
-    ".bmp",
-    ".svg",
-    ".heic",
-    ".heif",
-  ];
-  return imageExtensions.some((ext) => lowerUrl.endsWith(ext));
+  return (
+    lowerUrl.endsWith(".mp4") ||
+    lowerUrl.endsWith(".webm") ||
+    lowerUrl.endsWith(".mkv") ||
+    lowerUrl.endsWith(".mov") ||
+    lowerUrl.endsWith(".avi")
+  );
 }
 </script>
