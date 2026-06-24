@@ -35,7 +35,7 @@ export async function login(credentials: LoginCredentials): Promise<LoginRespons
 
   const response = await $fetch<LoginResponse>(url, {
     method: endpoint.method,
-    body: credentials,
+    body: { ...credentials, client: "admin" },
   })
 
   // Store token

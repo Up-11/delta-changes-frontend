@@ -204,6 +204,7 @@ const navigation = [
   { path: "/admin/banners", label: "Баннеры", icon: "i-lucide-image" },
   { path: "/admin/news", label: "Новости", icon: "i-lucide-newspaper" },
   { path: "/admin/managers", label: "Менеджеры", icon: "i-lucide-users" },
+  { path: "/admin/users", label: "Пользователи", icon: "i-lucide-user-cog" },
   { path: "/admin/about", label: "О компании", icon: "i-lucide-building" },
   { path: "/admin/applications", label: "Заявки", icon: "i-lucide-inbox" },
 ];

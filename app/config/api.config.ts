@@ -15,7 +15,7 @@ export function getApiBaseUrl(): string {
 }
 
 /** Default fallback base URL */
-export const DEFAULT_API_BASE_URL = "https://jvzp9vk6-4200.euw.devtunnels.ms";
+export const DEFAULT_API_BASE_URL = "https://jvzp9vk6-4000.euw.devtunnels.ms";
 
 /** Helper to build full URL */
 export function buildApiUrl(endpoint: string): string {
@@ -26,11 +26,17 @@ export const API_ENDPOINTS = {
   /** Auth module - Authentication */
   auth: {
     base: "/auth",
+    register: {
+      method: "POST" as const,
+      path: "/auth/register",
+      access: "public" as const,
+      description: "Register site user",
+    },
     login: {
       method: "POST" as const,
       path: "/auth/login",
       access: "public" as const,
-      description: "Admin login with username and password",
+      description: "Login (email for users, username for admin)",
     },
     logout: {
       method: "POST" as const,
@@ -382,6 +388,35 @@ export const API_ENDPOINTS = {
     },
   },
 
+  /** Favorites - User favorite apartments */
+  favorites: {
+    base: "/favorites",
+    ids: {
+      method: "GET" as const,
+      path: "/favorites/ids",
+      access: "user" as const,
+      description: "Get favorite apartment IDs",
+    },
+    list: {
+      method: "GET" as const,
+      path: "/favorites",
+      access: "user" as const,
+      description: "Get favorites with apartments",
+    },
+    add: {
+      method: "POST" as const,
+      path: (apartmentId: string) => `/favorites/${apartmentId}`,
+      access: "user" as const,
+      description: "Add apartment to favorites",
+    },
+    remove: {
+      method: "DELETE" as const,
+      path: (apartmentId: string) => `/favorites/${apartmentId}`,
+      access: "user" as const,
+      description: "Remove apartment from favorites",
+    },
+  },
+
   /** Static files - Served directly from uploads folder */
   static: {
     uploads: {
@@ -438,7 +473,7 @@ export const ADMIN_ENDPOINTS = [
   "/uploads/:id",
 ];
 
-export type ApiAccess = "public" | "admin";
+export type ApiAccess = "public" | "admin" | "user";
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
 
 export interface EndpointConfig {

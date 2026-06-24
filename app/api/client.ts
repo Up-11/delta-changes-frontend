@@ -8,6 +8,11 @@ import type { ApiErrorResponse } from "./types";
 
 const TOKEN_KEY = "auth_token";
 
+/** Admin panel session is active */
+export function hasAdminAuthToken(): boolean {
+  return !!getAuthToken();
+}
+
 /** Get auth token from localStorage */
 function getAuthToken(): string | null {
   if (import.meta.client) {

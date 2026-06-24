@@ -20,6 +20,21 @@ const lastScrollY = ref(0);
 const scrollThreshold = 50;
 
 const { objects, fetchObjects, getObjectMedia } = useObjects();
+const { isAuthenticated, user, logout } = useSiteAuth();
+const isAdminSession = computed(
+  () => import.meta.client && !!localStorage.getItem("auth_token"),
+);
+const showSiteUser = computed(
+  () => isAuthenticated.value && !isAdminSession.value,
+);
+const route = useRoute();
+
+async function handleSiteLogout() {
+  await logout();
+  if (route.path.startsWith("/profile")) {
+    await navigateTo("/");
+  }
+}
 
 // Detect touch device on mount
 onMounted(() => {
@@ -140,7 +155,6 @@ function handleMenuLinkClick(item: any, event: MouseEvent) {
 }
 
 // Watch for route changes to ensure everything is closed
-const route = useRoute();
 watch(
   () => route.fullPath,
   () => {
@@ -332,8 +346,35 @@ function onMouseLeave(el: HTMLElement) {
         </NuxtLink>
       </div>
 
-      <!-- Right: Phone & Menu -->
-      <div class="flex items-center gap-3 md:gap-6">
+      <!-- Right: Auth, Phone & Menu -->
+      <div class="flex items-center gap-2 md:gap-4">
+        <template v-if="showSiteUser">
+          <NuxtLink
+            to="/profile"
+            class="hidden md:flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] text-neutral-900 font-medium hover:text-neutral-500 transition-colors"
+          >
+            <UIcon name="i-lucide-user" class="w-4 h-4" />
+            <span class="max-w-[120px] truncate">{{
+              user?.name || "Профиль"
+            }}</span>
+          </NuxtLink>
+          <button
+            type="button"
+            class="hidden md:block text-[10px] uppercase tracking-[0.15em] text-neutral-400 hover:text-neutral-900"
+            @click="handleSiteLogout"
+          >
+            Выйти
+          </button>
+        </template>
+        <template v-else>
+          <NuxtLink
+            to="/auth/login"
+            class="hidden md:block text-[10px] uppercase tracking-[0.15em] text-neutral-900 font-medium hover:text-neutral-500"
+          >
+            Войти
+          </NuxtLink>
+        </template>
+
         <!-- Mobile: Phone Icon -->
         <a
           href="tel:+79999999999"
@@ -508,12 +549,19 @@ function onMouseLeave(el: HTMLElement) {
           >
             <ul class="space-y-3 md:space-y-4">
               <li
-                v-for="(item, index) in [
+                v-for="item in [
                   { label: 'Главная', path: '/' },
                   { label: 'О компании', path: '/about' },
                   { label: 'Недвижимость', path: '/real-estate' },
-
                   { label: 'Контакты', path: '/contacts' },
+                  ...(showSiteUser
+                    ? [{ label: 'Профиль', path: '/profile' }]
+                    : isAdminSession
+                      ? []
+                      : [
+                          { label: 'Войти', path: '/auth/login' },
+                          { label: 'Регистрация', path: '/auth/register' },
+                        ]),
                 ]"
                 :key="item.path"
                 class="overflow-hidden"

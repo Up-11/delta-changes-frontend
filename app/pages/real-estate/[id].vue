@@ -12,6 +12,11 @@ definePageMeta({
   layout: "default",
 });
 
+const { ensureInitialized } = useFavorites();
+onMounted(() => {
+  ensureInitialized();
+});
+
 const route = useRoute();
 const apartmentId = computed(() => route.params.id as string);
 
@@ -284,16 +289,23 @@ function navigateToApartment(apt: ApartmentWithRelations) {
       >
         <!-- Top Bar -->
 
-        <UButton
-          to="/real-estate"
-          color="neutral"
-          variant="ghost"
-          size="sm"
-          class="gap-2 absolute top-2 left-2"
-        >
-          <UIcon name="i-lucide-arrow-left" class="w-4 h-4" />
-          <span class="uppercase text-xs tracking-wider">В каталог</span>
-        </UButton>
+        <div class="absolute top-2 left-2 right-2 flex items-center justify-between z-10">
+          <UButton
+            to="/real-estate"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            class="gap-2 bg-white/80"
+          >
+            <UIcon name="i-lucide-arrow-left" class="w-4 h-4" />
+            <span class="uppercase text-xs tracking-wider">В каталог</span>
+          </UButton>
+          <SiteFavoriteButton
+            v-if="apartment"
+            :apartment-id="apartment.id"
+            size="lg"
+          />
+        </div>
 
         <!-- Image Container - constrained to viewport -->
         <div
@@ -369,15 +381,22 @@ function navigateToApartment(apt: ApartmentWithRelations) {
             {{ formatPrice(apartment.price) }}
           </div>
 
-          <UButton
-            color="neutral"
-            size="xl"
-            class="w-full rounded-none py-5 uppercase tracking-widest text-sm font-bold bg-neutral-900 hover:bg-neutral-800 text-white border-0 shadow-lg"
-            @click="openBookingForm"
-          >
-            <UIcon name="i-lucide-phone" class="w-5 h-5 mr-3" />
-            Забронировать
-          </UButton>
+          <div class="flex gap-3">
+            <UButton
+              color="neutral"
+              size="xl"
+              class="flex-1 rounded-none py-5 uppercase tracking-widest text-sm font-bold bg-neutral-900 hover:bg-neutral-800 text-white border-0 shadow-lg"
+              @click="openBookingForm"
+            >
+              <UIcon name="i-lucide-phone" class="w-5 h-5 mr-3" />
+              Забронировать
+            </UButton>
+            <SiteFavoriteButton
+              :apartment-id="apartment.id"
+              size="lg"
+              variant="inline"
+            />
+          </div>
         </div>
 
         <!-- Specifications List -->

@@ -14,6 +14,11 @@ definePageMeta({
   layout: "default",
 });
 
+const { ensureInitialized } = useFavorites();
+onMounted(() => {
+  ensureInitialized();
+});
+
 // Route and query params
 const route = useRoute();
 const objectSlug = computed(() => route.query.object as string | undefined);
@@ -617,6 +622,9 @@ const projectsSelectItems = computed(() => [
             class="relative h-56 bg-neutral-100 overflow-hidden group/image"
             @click.stop="openLightbox(getApartmentImage(apt), apt)"
           >
+            <div class="absolute top-3 right-3 z-10">
+              <SiteFavoriteButton :apartment-id="apt.id" size="sm" />
+            </div>
             <img
               :src="getApartmentImage(apt)"
               class="w-full h-full object-contain group-hover/image:scale-105 transition-transform duration-300"

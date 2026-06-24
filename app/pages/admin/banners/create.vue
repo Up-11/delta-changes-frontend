@@ -48,6 +48,7 @@
               v-model="state.mediaId"
               label="Загрузить изображение или видео"
               icon="i-lucide-file-video"
+              @update:model-value="state.mediaId = $event"
             />
           </UFormField>
         </div>
@@ -130,8 +131,11 @@ async function onSubmit() {
 
   loading.value = true;
   try {
+    console.log(
+      "[Banner Create] Submitting state:",
+      JSON.stringify(state, null, 2),
+    );
     await bannersService.create(state);
-    console.log(state);
 
     toast.add({
       title: "Успех",

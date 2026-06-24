@@ -96,6 +96,27 @@ export const SITE_ROUTES: RouteConfig[] = [
     description: 'Контактная информация и форма обратной связи'
   },
   {
+    path: '/auth/login',
+    name: 'auth-login',
+    label: 'Вход',
+    icon: 'i-lucide-log-in',
+    description: 'Вход в личный кабинет'
+  },
+  {
+    path: '/auth/register',
+    name: 'auth-register',
+    label: 'Регистрация',
+    icon: 'i-lucide-user-plus',
+    description: 'Регистрация на сайте'
+  },
+  {
+    path: '/profile',
+    name: 'profile',
+    label: 'Профиль',
+    icon: 'i-lucide-user',
+    description: 'Личный кабинет и избранное'
+  },
+  {
     path: '/application',
     name: 'application',
     label: 'Оставить заявку',
@@ -154,6 +175,13 @@ export const ADMIN_ROUTES: RouteConfig[] = [
     label: 'Заявки',
     icon: 'i-lucide-inbox',
     description: 'Управление заявками'
+  },
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    label: 'Пользователи',
+    icon: 'i-lucide-user-cog',
+    description: 'Управление пользователями сайта'
   },
   {
     path: '/admin/uploads',
