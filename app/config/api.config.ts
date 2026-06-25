@@ -15,7 +15,8 @@ export function getApiBaseUrl(): string {
 }
 
 /** Default fallback base URL */
-export const DEFAULT_API_BASE_URL = "https://jvzp9vk6-4000.euw.devtunnels.ms";
+export const DEFAULT_API_BASE_URL =
+  "http://delta-backend-thny6g-34647e-5-129-207-2.sslip.io/";
 
 /** Helper to build full URL */
 export function buildApiUrl(endpoint: string): string {
