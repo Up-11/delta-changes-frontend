@@ -78,8 +78,10 @@
 										size="xs"
 										icon="i-lucide-x"
 										@click="
-											state.projectId = ''
-											selectedProjectName = ''
+											() => {
+												state.projectId = ''
+												selectedProjectName = ''
+											}
 										"
 									/>
 								</div>
@@ -422,7 +424,7 @@
 							class="p-6 border border-neutral-200 rounded-xl space-y-4 relative group"
 						>
 							<UButton
-								color="red"
+								color="primary"
 								variant="ghost"
 								size="xs"
 								icon="i-lucide-trash-2"
