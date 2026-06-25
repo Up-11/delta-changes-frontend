@@ -12,7 +12,7 @@
 		"postinstall": "nuxt prepare",
 		"lint": "eslint .",
 		"typecheck": "nuxt typecheck",
-		"start": "node .output/server/index.mjs"
+		"start": "nuxt preview"
 	},
 	"dependencies": {
 		"@iconify-json/lucide": "^1.2.102",
