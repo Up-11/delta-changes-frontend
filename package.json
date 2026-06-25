@@ -20,8 +20,8 @@
 		"@nuxt/image": "2.0.0",
 		"@nuxt/ui": "^4.6.1",
 		"cyrillic-to-translit-js": "^3.2.1",
+		"gsap": "^3.15.0",
 		"nuxt": "^4.4.2",
-		"pnpm": "^10.34.4",
 		"tailwindcss": "^4.2.2",
 		"vue-yandex-maps": "^3.0.4"
 	},
