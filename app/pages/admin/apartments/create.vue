@@ -56,12 +56,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="
-											state.projectId = ''
-											selectedProjectName = ''
-											state.objectId = ''
-											selectedObjectName = ''
-										"
+										@click="resetProjectSelection"
 									/>
 								</div>
 
@@ -121,10 +116,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="
-											state.objectId = ''
-											selectedObjectName = ''
-										"
+										@click="resetObjectSelection"
 									/>
 								</div>
 
@@ -417,5 +409,17 @@ async function onSubmit() {
 	} finally {
 		loading.value = false
 	}
+}
+
+const resetProjectSelection = () => {
+	state.projectId = ''
+	selectedProjectName.value = ''
+	state.objectId = ''
+	selectedObjectName.value = ''
+}
+
+const resetObjectSelection = () => {
+	state.objectId = ''
+	selectedObjectName.value = ''
 }
 </script>
