@@ -362,14 +362,14 @@ const state = reactive<CreateApartmentDto>({
 // Helper functions for clearing selections
 function clearProjectSelection() {
 	state.projectId = ''
-	selectedProjectName = ''
+	selectedProjectName.value = ''
 	state.objectId = ''
-	selectedObjectName = ''
+	selectedObjectName.value = ''
 }
 
 function clearObjectSelection() {
 	state.objectId = ''
-	selectedObjectName = ''
+	selectedObjectName.value = ''
 }
 
 const validate = (state: any) => {
