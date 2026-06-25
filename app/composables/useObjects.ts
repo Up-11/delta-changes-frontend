@@ -13,7 +13,7 @@ export function useObjects() {
 
 		try {
 			const response = await api.get<ObjectWithRelations[]>(
-				'/objects?include=project,apartments,media',
+				'/objects?include=project,apartments,media,banner',
 			)
 			objects.value = response
 				.filter(o => o.isActive)

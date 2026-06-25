@@ -274,7 +274,6 @@ function highlightObjectInList(objectId: string) {
 		}
 	})
 }
-
 function getObjectImage(object: ObjectWithRelations): string {
 	const media = object.banner?.find(m => m.type === 'IMAGE')
 	if (media) {
