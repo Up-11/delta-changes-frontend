@@ -625,10 +625,10 @@ function onMouseLeave(el: HTMLElement) {
 									>Телефон</span
 								>
 								<a
-									href="tel:+79999999999"
+									href="tel:+73912889239"
 									class="text-lg tracking-widest text-neutral-900 hover:text-neutral-600 transition-colors"
 								>
-									+7 (999) 999-99-99
+									+7 (391) 288-92-39
 								</a>
 							</div>
 							<div>
