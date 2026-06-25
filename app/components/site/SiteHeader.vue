@@ -598,11 +598,11 @@ function onMouseLeave(el: HTMLElement) {
 						<!-- Mobile Contact Info (visible only on small screens) -->
 						<div class="lg:hidden mt-12 space-y-6">
 							<a
-								href="tel:+79999999999"
+								href="tel:+73912889239"
 								class="flex items-center gap-3 text-neutral-900"
 							>
 								<UIcon name="i-lucide-phone" class="w-5 h-5" />
-								<span class="text-sm tracking-wider">+7 (999) 999-99-99</span>
+								<span class="text-sm tracking-wider"> +7 (391) 288-92-39</span>
 							</a>
 							<a
 								href="mailto:info@deltastroi.ru"
