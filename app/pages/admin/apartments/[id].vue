@@ -71,7 +71,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="resetProjectState"
+										@click="clearObjectSelection"
 									/>
 								</div>
 
@@ -131,7 +131,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="resetObjectState"
+										@click="clearProjectSelection"
 									/>
 								</div>
 
@@ -405,6 +405,19 @@ const floorPlanPhotoUrl = ref<string | null>(null)
 const masterPlanPhotoUrl = ref<string | null>(null)
 const isDataLoaded = ref(false)
 
+// Helper functions for clearing selections
+function clearProjectSelection() {
+	state.projectId = ''
+	selectedProjectName = ''
+	state.objectId = ''
+	selectedObjectName = ''
+}
+
+function clearObjectSelection() {
+	state.objectId = ''
+	selectedObjectName = ''
+}
+
 onMounted(async () => {
 	try {
 		const [data, projects, objects] = await Promise.all([
@@ -503,7 +516,9 @@ async function onSubmit() {
 			rooms: state.rooms ? Number(state.rooms) : undefined,
 			building: state.building || undefined,
 			entrance: state.entrance || undefined,
-			completionDate: state.completionDate || undefined,
+			completionDate: state.completionDate
+				? `${state.completionDate}T00:00:00.000Z`
+				: undefined,
 			floor: Number(state.floor),
 			floorTotal: Number(state.floorTotal),
 			finishing: selectedFinishing.value?.value || FinishingType.NONE,

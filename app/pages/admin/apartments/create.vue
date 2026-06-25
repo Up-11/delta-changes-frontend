@@ -56,7 +56,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="resetProjectSelection"
+										@click="clearObjectSelection"
 									/>
 								</div>
 
@@ -116,7 +116,7 @@
 										variant="ghost"
 										size="xs"
 										icon="i-lucide-x"
-										@click="resetObjectSelection"
+										@click="clearProjectSelection"
 									/>
 								</div>
 
@@ -359,6 +359,19 @@ const state = reactive<CreateApartmentDto>({
 	masterPlanPhotoId: null,
 })
 
+// Helper functions for clearing selections
+function clearProjectSelection() {
+	state.projectId = ''
+	selectedProjectName = ''
+	state.objectId = ''
+	selectedObjectName = ''
+}
+
+function clearObjectSelection() {
+	state.objectId = ''
+	selectedObjectName = ''
+}
+
 const validate = (state: any) => {
 	const errors: any[] = []
 	if (!state.projectId)
@@ -388,7 +401,9 @@ async function onSubmit() {
 		const submitData = {
 			...state,
 			finishing: selectedFinishing.value?.value || FinishingType.NONE,
-			completionDate: state.completionDate || undefined,
+			completionDate: state.completionDate
+				? `${state.completionDate}T00:00:00.000Z`
+				: undefined,
 		}
 		await apartmentsService.create(submitData)
 
